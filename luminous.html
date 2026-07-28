@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Luminous">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23F5E6E6'/><text x='50' y='68' text-anchor='middle' font-size='50'>✨</text></svg>">
+<title>Luminous 工作台</title>
+<style>
+:root {
+  --pink: #F5E6E6; --pink-l: #FDF6F6; --pink-a: #D4A0A0;
+  --blue: #E6EEF5; --blue-l: #F4F8FC; --blue-a: #8B9DC3;
+  --bg: #F8F6F8; --card: #FFFFFF; --text: #4A4550;
+  --t2: #948C9A; --t3: #B8B0BE; --border: #EDE8EE;
+  --s: #98B89A; --w: #E8D0A0; --d: #D08880;
+  --r: 16px; --rs: 10px; --sh: 0 2px 16px rgba(0,0,0,0.05);
+  --nav-w: 200px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+.app { display:flex; min-height:100vh; position:relative; }
+
+/* Overlay */
+.overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:90;
+  display:none;
+}
+.overlay.show { display:block; }
+
+/* Sidebar */
+.sidebar {
+  position:fixed; top:0; left:-var(--nav-w); width:var(--nav-w); height:100vh;
+  background:var(--card); border-right:1px solid var(--border);
+  z-index:100; overflow-y:auto; overflow-x:hidden;
+  transition:left 0.3s cubic-bezier(0.4,0,0.2,1);
+  padding:16px 0 80px;
+  display:flex; flex-direction:column;
+  -webkit-overflow-scrolling:touch;
+}
+.sidebar.open { left:0; }
+.sidebar-logo {
+  padding:12px 20px; text-align:center; border-bottom:1px solid var(--border);
+  margin-bottom:8px;
+}
+.sidebar-logo .name { font-size:17px; font-weight:700; color:var(--text); }
+.sidebar-logo .tag { font-size:11px; color:var(--t2); margin-top:2px; }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:11px 20px;
+  font-size:14px; cursor:pointer; color:var(--t2); border:none; background:none;
+  width:100%; text-align:left; transition:all 0.15s;
+  white-space:nowrap;
+}
+.nav-item:active { background:var(--pink-l); }
+.nav-item.active { color:var(--pink-a); background:var(--pink-l); font-weight:600; }
+.nav-icon { font-size:16px; width:22px; text-align:center; flex-shrink:0; }
+
+/* Main */
+.main {
+  flex:1; padding:16px 14px 100px; min-height:100vh;
+  max-width:100%; width:100%;
+  transition:margin-left 0.3s;
+}
+.page { display:none; }
+.page.active { display:block; }
+.page-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px; flex-wrap:wrap; gap:8px;
+}
+.page-header h2 { font-size:20px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.date-display { font-size:12px; color:var(--t2); }
+
+/* Cards */
+.card {
+  background:var(--card); border-radius:var(--r); padding:16px;
+  box-shadow:var(--sh); margin-bottom:14px;
+}
+.card-title { font-size:16px; font-weight:600; margin-bottom:4px; }
+.card-subtitle { font-size:12px; color:var(--t2); margin-bottom:12px; }
+
+/* Buttons */
+.btn {
+  display:inline-flex; align-items:center; gap:6px; padding:10px 18px;
+  border:none; border-radius:var(--rs); font-size:14px; cursor:pointer;
+  font-weight:600; transition:all 0.15s; min-height:44px;
+}
+.btn:active { transform:scale(0.96); }
+.btn-primary { background:var(--pink-a); color:#fff; }
+.btn-primary:active { background:#C08888; }
+.btn-secondary { background:var(--blue); color:var(--blue-a); }
+.btn-secondary:active { background:#D8E2F0; }
+.btn-sm { padding:6px 12px; font-size:12px; min-height:36px; }
+
+/* Inputs */
+input, textarea, select {
+  width:100%; padding:11px 14px; border:1.5px solid var(--border);
+  border-radius:var(--rs); font-size:14px; font-family:inherit;
+  color:var(--text); background:var(--card); outline:none;
+  transition:border-color 0.15s; -webkit-appearance:none;
+}
+input:focus, textarea:focus, select:focus { border-color:var(--pink-a); }
+textarea { resize:vertical; min-height:80px; }
+
+/* Todo */
+.todo-list { list-style:none; }
+.todo-item {
+  display:flex; align-items:center; gap:10px; padding:12px 0;
+  border-bottom:1px solid var(--border); min-height:50px;
+}
+.todo-item:last-child { border-bottom:none; }
+.todo-check {
+  width:24px; height:24px; border:2px solid var(--pink-a); border-radius:6px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; font-size:14px; color:transparent; transition:all 0.15s;
+  background:#fff;
+}
+.todo-check.done { background:var(--pink-a); color:#fff; }
+.todo-text { flex:1; font-size:14px; word-break:break-all; }
+.todo-text.done { text-decoration:line-through; color:var(--t3); }
+.todo-del {
+  cursor:pointer; font-size:16px; color:var(--t3); padding:6px; min-width:36px;
+  text-align:center; opacity:0; transition:opacity 0.15s;
+}
+.todo-item:hover .todo-del, .todo-item:active .todo-del { opacity:1; }
+.add-todo { display:flex; gap:8px; margin-top:12px; }
+.add-todo input { flex:1; }
+
+/* Stats */
+.stats { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.stat-card {
+  flex:1; min-width:80px; background:var(--card); border-radius:var(--rs);
+  padding:12px; text-align:center; box-shadow:var(--sh);
+}
+.stat-num { font-size:24px; font-weight:700; color:var(--pink-a); }
+.stat-label { font-size:11px; color:var(--t2); margin-top:2px; }
+
+/* Progress bar */
+.progress-bar {
+  height:8px; background:var(--pink); border-radius:4px; overflow:hidden;
+  margin:8px 0;
+}
+.progress-fill {
+  height:100%; background:linear-gradient(90deg,var(--pink-a),var(--blue-a));
+  border-radius:4px; transition:width 0.4s;
+}
+
+/* Inspiration & Video Cards */
+.inspo-item, .video-card, .recre-item, .review-card {
+  padding:14px; border:1px solid var(--border); border-radius:var(--rs);
+  margin-bottom:10px; background:var(--card);
+}
+.inspo-title, .video-title, .recre-title { font-size:14px; font-weight:600; margin-bottom:6px; }
+.inspo-reason, .video-reason { font-size:12px; color:var(--t2); margin-bottom:8px; line-height:1.6; }
+.inspo-idea { font-size:12px; background:var(--blue-l); padding:10px 12px; border-radius:8px; margin-top:8px; line-height:1.6; }
+.inspo-idea strong { color:var(--blue-a); }
+.link-btn {
+  display:inline-flex; align-items:center; gap:4px; font-size:12px;
+  color:var(--blue-a); text-decoration:none; padding:4px 10px;
+  border:1px solid var(--blue-a); border-radius:20px; margin-right:6px;
+  transition:all 0.15s;
+}
+.link-btn:active { background:var(--blue); }
+.tag-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+.tag {
+  font-size:10px; padding:3px 10px; border-radius:20px;
+  white-space:nowrap;
+}
+.tag-pink { background:var(--pink); color:var(--pink-a); }
+.tag-blue { background:var(--blue); color:var(--blue-a); }
+.tag-green { background:#E8F0E4; color:var(--s); }
+.tag-warn { background:#FFF8E8; color:#C0A060; }
+.tag-avail { background:#E8F0E4; color:#7A9E6E; cursor:pointer; }
+.tag-shoot { background:var(--blue); color:var(--blue-a); cursor:pointer; }
+.tag-done-tag { background:var(--pink); color:var(--pink-a); cursor:pointer; }
+
+/* Mock refresh button */
+.mock-btn {
+  background:linear-gradient(135deg,var(--pink-a),var(--blue-a));
+  color:#fff; border:none; padding:12px 24px; border-radius:var(--rs);
+  font-size:14px; font-weight:600; cursor:pointer; min-height:44px;
+  width:100%; transition:all 0.15s;
+}
+.mock-btn:active { transform:scale(0.97); opacity:0.9; }
+
+/* English */
+.eng-article-card, .eng-speaking-card {
+  padding:14px; border:2px solid var(--border); border-radius:var(--rs);
+  margin-bottom:10px; cursor:pointer; transition:all 0.15s;
+}
+.eng-article-card.selected, .eng-article-card:active { border-color:var(--pink-a); background:var(--pink-l); }
+.reading-row {
+  padding:12px; border-bottom:1px solid var(--border); cursor:pointer;
+  transition:background 0.15s;
+}
+.reading-row.active { background:var(--blue-l); border-left:3px solid var(--blue-a); }
+.reading-en { font-size:15px; line-height:1.7; margin-bottom:6px; }
+.reading-zh { font-size:13px; color:var(--t2); display:none; line-height:1.6; }
+.reading-zh.visible { display:block; }
+.player-bar {
+  position:fixed; bottom:0; left:0; right:0; background:var(--card);
+  border-top:1px solid var(--border); padding:12px 16px; z-index:80;
+  display:flex; align-items:center; gap:8px; justify-content:center;
+  box-shadow:0 -2px 12px rgba(0,0,0,0.04);
+  flex-wrap:wrap;
+}
+.player-bar button {
+  width:40px; height:40px; border:1.5px solid var(--border); border-radius:50%;
+  background:var(--card); font-size:18px; cursor:pointer; display:flex;
+  align-items:center; justify-content:center; transition:all 0.15s;
+}
+.player-bar button:active { background:var(--pink-l); }
+.player-bar .btn-speed {
+  width:auto; height:36px; border-radius:20px; padding:0 12px; font-size:12px;
+  font-weight:600;
+}
+.player-bar .btn-speed.active { background:var(--pink-a); color:#fff; border-color:var(--pink-a); }
+.player-progress {
+  flex:1; min-width:120px; height:6px; background:var(--border); border-radius:3px;
+  overflow:hidden; cursor:pointer;
+}
+.player-progress-inner { height:100%; background:var(--blue-a); border-radius:3px; transition:width 0.2s; }
+
+/* Vocab */
+.vocab-grid { display:flex; gap:8px; flex-wrap:wrap; }
+.vocab-word {
+  padding:6px 14px; background:var(--blue-l); border-radius:20px;
+  font-size:13px; cursor:pointer; transition:all 0.15s;
+}
+.vocab-word:active { background:var(--blue); }
+.quiz-modal {
+  position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200;
+  display:none; align-items:center; justify-content:center;
+}
+.quiz-modal.show { display:flex; }
+.quiz-body {
+  background:var(--card); border-radius:var(--r); padding:24px;
+  width:90%; max-width:400px;
+}
+.quiz-option {
+  padding:12px; border:1.5px solid var(--border); border-radius:var(--rs);
+  margin-bottom:8px; cursor:pointer; transition:all 0.15s; font-size:14px;
+}
+.quiz-option:active { background:var(--pink-l); }
+.quiz-option.correct { border-color:var(--s); background:#E8F5E9; }
+.quiz-option.wrong { border-color:var(--d); background:#FFEBEE; }
+
+/* Expense */
+.exp-form { display:flex; gap:8px; flex-wrap:wrap; }
+.exp-form input, .exp-form select { flex:1; min-width:80px; }
+.exp-summary { font-size:28px; font-weight:700; color:var(--pink-a); text-align:center; padding:16px; }
+.exp-list .exp-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0; border-bottom:1px solid var(--border); font-size:14px;
+}
+.exp-row .exp-cat { font-size:11px; color:var(--t2); }
+.exp-row .exp-amt { font-weight:600; }
+
+/* Body */
+.body-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; }
+.body-item {
+  background:var(--card); border-radius:var(--rs); padding:12px; text-align:center;
+  box-shadow:var(--sh);
+}
+.body-item .val { font-size:22px; font-weight:700; color:var(--blue-a); cursor:pointer; }
+.body-item .val:hover { text-decoration:underline; }
+.body-item .lbl { font-size:11px; color:var(--t2); margin-top:2px; }
+.body-item .change { font-size:10px; margin-top:2px; }
+
+/* Date nav */
+.date-nav { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.date-nav button { font-size:18px; padding:6px 10px; border:none; background:none; cursor:pointer; color:var(--t2); }
+
+/* History toggle */
+.history-section { margin-top:14px; }
+.history-toggle {
+  font-size:13px; color:var(--blue-a); cursor:pointer; font-weight:600;
+  display:inline-flex; align-items:center; gap:4px;
+}
+
+/* Toast */
+.toast {
+  position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
+  background:var(--text); color:#fff; padding:10px 24px; border-radius:20px;
+  font-size:13px; z-index:300; opacity:0; transition:opacity 0.3s; pointer-events:none;
+}
+.toast.show { opacity:1; }
+
+/* Hamburger */
+.hamburger {
+  position:fixed; top:14px; left:14px; z-index:110; width:40px; height:40px;
+  border-radius:10px; background:var(--card); border:1.5px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; cursor:pointer; box-shadow:var(--sh);
+}
+.hamburger span { width:18px; height:2px; background:var(--text); border-radius:2px; transition:all 0.3s; }
+.hamburger.active span:nth-child(1) { transform:rotate(45deg) translate(4px,4px); }
+.hamburger.active span:nth-child(2) { opacity:0; }
+.hamburger.active span:nth-child(3) { transform:rotate(-45deg) translate(4px,-4px); }
+
+/* Responsive */
+@media (min-width: 768px) {
+  .sidebar { left:0; }
+  .main { margin-left:var(--nav-w); padding:24px 28px 40px; }
+  .hamburger { display:none; }
+  .overlay { display:none !important; }
+  .player-bar { left:var(--nav-w); }
+}
+@media (max-width: 767px) {
+  .main { padding:16px 12px 110px; }
+  .page-header h2 { font-size:18px; }
+  .card { padding:14px; }
+  .player-bar { padding:10px 12px; gap:4px; }
+  .player-bar button { width:36px; height:36px; font-size:16px; }
+  .stat-card { padding:10px 8px; }
+  .stat-num { font-size:20px; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1E1B1F; --card: #252228; --text: #E8E4EB; --t2: #9C96A2;
+    --t3: #6B6570; --border: #3A3540;
+    --pink: #3D2E30; --pink-l: #2A2224; --blue: #262D38; --blue-l: #22262E;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="overlay" onclick="closeSidebar()"></div>
+  <div class="hamburger" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="name">✨ Luminous</div>
+      <div class="tag">学习vlog博主 · 备考雅思 · 在职读研</div>
+    </div>
+    <button class="nav-item active" data-page="plan"><span class="nav-icon">☑️</span>每日计划</button>
+    <button class="nav-item" data-page="inspo"><span class="nav-icon">💡</span>选题灵感</button>
+    <button class="nav-item" data-page="recre"><span class="nav-icon">🔥</span>爆款二创</button>
+    <button class="nav-item" data-page="review"><span class="nav-icon">📊</span>内容复盘</button>
+    <button class="nav-item" data-page="english"><span class="nav-icon">🇬🇧</span>英语学习</button>
+    <button class="nav-item" data-page="mpa"><span class="nav-icon">📚</span>MPA学习</button>
+    <button class="nav-item" data-page="expense"><span class="nav-icon">💰</span>消费记账</button>
+    <button class="nav-item" data-page="news"><span class="nav-icon">📰</span>行业新闻</button>
+    <button class="nav-item" data-page="work"><span class="nav-icon">💼</span>工作总结</button>
+    <button class="nav-item" data-page="body"><span class="nav-icon">🧘</span>身材管理</button>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- 每日计划 -->
+    <div class="page active" id="page-plan">
+      <div class="page-header"><h2><span>☑️</span>每日计划</h2><span class="date-display" id="dp-date"></span></div>
+      <div class="date-nav">
+        <button onclick="planShiftDay(-1)">◀</button>
+        <span id="plan-date-label" style="font-weight:600;font-size:14px;min-width:100px;text-align:center;">今天</span>
+        <button onclick="planShiftDay(1)">▶</button>
+        <button onclick="planShiftDay(0)" style="font-size:12px;color:var(--blue-a);">回今天</button>
+      </div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-num" id="stat-total">6</div><div class="stat-label">总任务</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-done">0</div><div class="stat-label">已完成</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-pct">0%</div><div class="stat-label">完成率</div></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="plan-progress"></div></div>
+      <div class="card">
+        <div class="card-title">📋 今日待办</div>
+        <ul class="todo-list" id="todo-list"></ul>
+        <div class="add-todo">
+          <input type="text" id="todo-input" placeholder="添加新任务..." onkeydown="if(event.key==='Enter')addTodo()"/>
+          <button class="btn btn-primary btn-sm" onclick="addTodo()">＋ 新增</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 选题灵感 -->
+    <div class="page" id="page-inspo">
+      <div class="page-header"><h2><span>💡</span>选题灵感</h2><span class="date-display" id="dp-date2"></span></div>
+      <div class="card">
+        <button class="mock-btn" onclick="collectInspirations()">🔍 采集今日热点</button>
+        <div class="card-subtitle" style="margin-top:8px;">每天 9:00 自动更新，分析各平台爆款并生成适配人设的创作思路</div>
+      </div>
+      <div id="inspo-list"></div>
+      <div class="history-section" id="inspo-history"></div>
+    </div>
+
+    <!-- 爆款二创 -->
+    <div class="page" id="page-recre">
+      <div class="page-header"><h2><span>🔥</span>爆款二创</h2><span class="date-display" id="dp-date3"></span></div>
+      <div class="card">
+        <div class="card-title">🎬 热点素材库</div>
+        <div class="card-subtitle">筛选适合改编的爆款，附详细拍摄脚本，贴合学习vlog + 雅思备考人设</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <span class="tag tag-avail" onclick="filterRecre('all')">全部</span>
+          <span class="tag tag-avail" style="background:var(--blue-l);" onclick="filterRecre('可用')">✅ 可用</span>
+          <span class="tag tag-shoot" onclick="filterRecre('待拍摄')">📋 待拍摄</span>
+          <span class="tag tag-done-tag" onclick="filterRecre('已拍摄')">🎬 已拍摄</span>
+        </div>
+      </div>
+      <div id="recre-list"></div>
+    </div>
+
+    <!-- 内容复盘 -->
+    <div class="page" id="page-review">
+      <div class="page-header"><h2><span>📊</span>内容复盘</h2><span class="date-display" id="dp-date4"></span></div>
+      <div class="card">
+        <div class="card-title">📝 发布数据录入</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <input type="text" id="rv-title" placeholder="作品标题"/>
+          <input type="number" id="rv-views" placeholder="播放量"/>
+          <input type="number" id="rv-likes" placeholder="点赞数"/>
+          <input type="number" id="rv-comments" placeholder="评论数"/>
+          <input type="number" id="rv-shares" placeholder="转发数"/>
+          <input type="number" id="rv-retention" placeholder="完播率(%)"/>
+          <select id="rv-source"><option value="">流量来源</option><option>推荐</option><option>搜索</option><option>关注</option><option>主页</option><option>其他</option></select>
+          <input type="date" id="rv-date"/>
+        </div>
+        <button class="btn btn-primary" onclick="addReview()" style="margin-top:10px;width:100%;">📊 提交并诊断</button>
+      </div>
+      <div id="review-list"></div>
+    </div>
+
+    <!-- 英语学习 -->
+    <div class="page" id="page-english">
+      <div class="page-header"><h2><span>🇬🇧</span>英语学习</h2><span class="date-display" id="dp-date5"></span></div>
+      <div class="card">
+        <div class="card-title">📚 雅思听力 — 盲听练习</div>
+        <div class="card-subtitle">每天 9:00 自动推送一篇雅思文章，逐句朗读、调倍速、单词训练</div>
+        <div id="eng-article-list"></div>
+      </div>
+      <div class="card" id="eng-reading-card" style="display:none;">
+        <div id="eng-article-title" style="font-weight:600;margin-bottom:10px;"></div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="toggleEngZH()">📖 切换译文</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleBlind()">🙈 盲听模式</button>
+          <span id="eng-word-count" style="font-size:12px;color:var(--t2);margin-left:auto;"></span>
+        </div>
+        <div id="eng-reading-area"></div>
+        <div class="card-title" style="margin-top:14px;">📝 单词训练</div>
+        <div class="vocab-grid" id="eng-vocab"></div>
+        <button class="btn btn-primary btn-sm" onclick="startEngQuiz()" style="margin-top:8px;">🎯 开始单词测试</button>
+        <div class="quiz-modal" id="eng-quiz-modal"><div class="quiz-body" id="eng-quiz-body"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🗣️ 雅思口语 — 每日题库</div>
+        <div class="card-subtitle">每天 9:00 自动推送一套剑桥口语题 + 9分答案</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;" id="speak-tabs">
+          <button class="btn btn-secondary btn-sm" onclick="switchSpeakTab('part1')">Part 1</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSpeakTab('part2')">Part 2</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchSpeakTab('part3')">Part 3</button>
+        </div>
+        <div id="speak-content"></div>
+      </div>
+    </div>
+
+    <!-- MPA学习 -->
+    <div class="page" id="page-mpa">
+      <div class="page-header"><h2><span>📚</span>MPA学习</h2><span class="date-display" id="dp-date6"></span></div>
+      <div class="card">
+        <div class="card-title">📖 今日公共管理资讯</div>
+        <div class="card-subtitle">每天 7:00 自动推送 3-5 条公共管理领域新闻与热点</div>
+        <div id="mpa-list"></div>
+      </div>
+      <div class="history-section" id="mpa-history"></div>
+    </div>
+
+    <!-- 消费记账 -->
+    <div class="page" id="page-expense">
+      <div class="page-header"><h2><span>💰</span>消费记账</h2><span class="date-display" id="dp-date7"></span></div>
+      <div class="card">
+        <div class="card-subtitle" style="text-align:center;">慢慢养成理性消费习惯，好好规划生活</div>
+      </div>
+      <div class="card">
+        <div class="card-title">💳 今日支出</div>
+        <div class="exp-form">
+          <input type="text" id="exp-item" placeholder="消费项目" style="flex:2;"/>
+          <input type="number" id="exp-amt" placeholder="金额" style="flex:1;min-width:70px;"/>
+          <select id="exp-cat"><option>餐饮</option><option>购物</option><option>交通</option><option>娱乐</option><option>学习</option><option>其他</option></select>
+          <button class="btn btn-primary btn-sm" onclick="addExpense()">记一笔</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="exp-summary" id="exp-day-total">¥0</div>
+        <div style="text-align:center;font-size:12px;color:var(--t2);">今日总支出</div>
+      </div>
+      <div class="date-nav">
+        <button onclick="expShiftDay(-1)">◀</button>
+        <span id="exp-date-label" style="font-weight:600;font-size:14px;">今天</span>
+        <button onclick="expShiftDay(1)">▶</button>
+      </div>
+      <div class="card"><div id="exp-list"></div></div>
+      <div class="card">
+        <div class="card-title">📊 月度统计</div>
+        <div id="exp-monthly" style="font-size:14px;color:var(--t2);"></div>
+      </div>
+    </div>
+
+    <!-- 行业新闻 -->
+    <div class="page" id="page-news">
+      <div class="page-header"><h2><span>📰</span>行业新闻</h2><span class="date-display" id="dp-date8"></span></div>
+      <div class="card">
+        <div class="card-title">💡 今日推送</div>
+        <div class="card-subtitle">每天 9:00 自动推送理财知识、生物医药、AI 新闻</div>
+        <div id="news-list"></div>
+      </div>
+      <div class="history-section" id="news-history"></div>
+    </div>
+
+    <!-- 工作总结 -->
+    <div class="page" id="page-work">
+      <div class="page-header"><h2><span>💼</span>工作总结</h2><span class="date-display" id="dp-date9"></span></div>
+      <div class="card">
+        <div class="card-title">📋 今日工作记录</div>
+        <textarea id="wrk-done" placeholder="今日工作完成情况..."></textarea>
+        <textarea id="wrk-gain" placeholder="今日工作收获..." style="margin-top:8px;"></textarea>
+        <textarea id="wrk-plan" placeholder="明日工作计划..." style="margin-top:8px;"></textarea>
+        <button class="btn btn-primary" onclick="saveWorkSummary()" style="margin-top:10px;width:100%;">💾 保存并优化表述</button>
+        <div id="wrk-optimized" style="margin-top:12px;"></div>
+      </div>
+      <div class="history-section" id="wrk-history"></div>
+    </div>
+
+    <!-- 身材管理 -->
+    <div class="page" id="page-body">
+      <div class="page-header"><h2><span>🧘</span>身材管理</h2><span class="date-display" id="dp-date10"></span></div>
+      <div class="card">
+        <div class="card-title">📏 身体维度</div>
+        <div class="card-subtitle">身高 165cm · 点击数值编辑</div>
+        <div class="body-grid" id="body-measurements"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏃 今日运动记录</div>
+        <input type="number" id="body-weight" placeholder="今日体重 (kg)" style="margin-bottom:8px;"/>
+        <input type="text" id="body-exercise" placeholder="运动项目" style="margin-bottom:8px;"/>
+        <div style="display:flex;gap:8px;">
+          <input type="number" id="body-duration" placeholder="时长(min)" style="flex:1;"/>
+          <input type="number" id="body-calories" placeholder="卡路里" style="flex:1;"/>
+        </div>
+        <button class="btn btn-primary" onclick="saveBodyLog()" style="margin-top:10px;width:100%;">💾 保存</button>
+        <div id="body-advice" style="margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👗 今日穿搭建议</div>
+        <div id="outfit-advice"></div>
+      </div>
+      <div class="history-section" id="body-history"></div>
+    </div>
+  </main>
+
+  <!-- Player bar -->
+  <div class="player-bar" id="player-bar" style="display:none;">
+    <button onclick="engPrevSent()">⏮</button>
+    <button id="btn-play" onclick="toggleEngPlay()">▶</button>
+    <button onclick="engNextSent()">⏭</button>
+    <div class="player-progress" onclick="engProgressClick(event)"><div class="player-progress-inner" id="eng-progress-inner"></div></div>
+    <span id="eng-sent-label" style="font-size:12px;color:var(--t2);">0/0</span>
+    <button class="btn-speed" onclick="engSetSpeed(0.6)">0.6x</button>
+    <button class="btn-speed active" onclick="engSetSpeed(0.85)">0.85x</button>
+    <button class="btn-speed" onclick="engSetSpeed(1)">1x</button>
+    <button class="btn-speed" onclick="engSetSpeed(1.25)">1.25x</button>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ===================== UTILITY =====================
+const LSK = (k) => localStorage.getItem('ll_'+k);
+const LSS = (k, v) => localStorage.setItem('ll_'+k, JSON.stringify(v));
+const LSG = (k, d) => { const v = LSK(k); return v ? JSON.parse(v) : d; };
+
+function td() { return new Date().toISOString().split('T')[0]; }
+function now() { return new Date(); }
+function fmtDate(d) {
+  const dt = new Date(d + 'T00:00:00');
+  const m = dt.getMonth()+1, day = dt.getDate(), w = ['日','一','二','三','四','五','六'][dt.getDay()];
+  return `${m}月${day}日 周${w}`;
+}
+function seededRand(seed) {
+  let h = 0; for (let i=0;i<seed.length;i++) { h=((h<<5)-h)+seed.charCodeAt(i); h|=0; }
+  return () => { h=(h*16807+0)%2147483647; return (h-1)/2147483646; };
+}
+function shuffle(arr, seed) {
+  const r = seededRand(seed), a = [...arr];
+  for (let i=a.length-1;i>0;i--) { const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function pick(arr, n, seed) { return shuffle(arr, seed).slice(0, n); }
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+let synth = window.speechSynthesis;
+let engSpeaking = false;
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.querySelector('.overlay');
+  const hb = document.querySelector('.hamburger');
+  sb.classList.toggle('open'); ov.classList.toggle('show'); hb.classList.toggle('active');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.querySelector('.overlay').classList.remove('show');
+  document.querySelector('.hamburger').classList.remove('active');
+}
+
+// Navigation
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    closeSidebar();
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const pageId = 'page-' + btn.dataset.page;
+    document.getElementById(pageId).classList.add('active');
+    // Hide player bar except on english page
+    document.getElementById('player-bar').style.display = btn.dataset.page === 'english' ? 'flex' : 'none';
+    document.querySelector('.main').scrollTop = 0;
+    onPageSwitch(btn.dataset.page);
+  });
+});
+
+function onPageSwitch(page) {
+  if (page === 'plan') { planViewDate = td(); renderPlan(); }
+  if (page === 'inspo') renderInspoPage();
+  if (page === 'recre') renderRecre();
+  if (page === 'review') renderReviews();
+  if (page === 'english') renderEngPage();
+  if (page === 'mpa') renderMPA();
+  if (page === 'expense') { expViewDate = td(); renderExpense(); }
+  if (page === 'news') renderNews();
+  if (page === 'work') renderWork();
+  if (page === 'body') renderBody();
+}
+
+// Date labels
+function updateDates() {
+  const d = td();
+  for (let i=1;i<=10;i++) {
+    const el = document.getElementById('dp-date'+i);
+    if (el) el.textContent = fmtDate(d);
+  }
+}
+
+// ===================== 1. 每日计划 =====================
+const DEFAULT_TASKS = [
+  '行业新闻 10min', '英语听力 60min', '英语口语 30min',
+  '英语阅读 60min', '多邻国 30min', 'MPA学习 30min'
+];
+let planViewDate = td();
+let planOffset = 0;
+
+function planShiftDay(offset) {
+  if (offset === 0) { planOffset = 0; planViewDate = td(); }
+  else { planOffset += offset; }
+  const d = new Date(); d.setDate(d.getDate() + planOffset);
+  planViewDate = d.toISOString().split('T')[0];
+  renderPlan();
+}
+
+function getPlan(date) { return LSG('plan_'+date, [...DEFAULT_TASKS]); }
+function savePlan(date, tasks) { LSS('plan_'+date, tasks); }
+
+function renderPlan() {
+  const date = planViewDate;
+  const tasks = getPlan(date);
+  const isToday = date === td();
+  document.getElementById('plan-date-label').textContent = isToday ? '今天' : fmtDate(date);
+
+  let doneCount = 0;
+  const doneSet = LSG('plan_done_'+date, []);
+  const container = document.getElementById('todo-list');
+  container.innerHTML = tasks.map((t, i) => {
+    const done = doneSet.includes(i);
+    if (done) doneCount++;
+    return `<li class="todo-item">
+      <div class="todo-check ${done?'done':''}" onclick="togglePlan('${date}',${i})">${done?'✓':''}</div>
+      <span class="todo-text ${done?'done':''}">${esc(t)}</span>
+      <span class="todo-del" onclick="delPlan('${date}',${i})">✕</span>
+    </li>`;
+  }).join('');
+
+  const total = tasks.length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-done').textContent = doneCount;
+  document.getElementById('stat-pct').textContent = total ? Math.round(doneCount/total*100)+'%' : '0%';
+  document.getElementById('plan-progress').style.width = total ? (doneCount/total*100)+'%' : '0%';
+}
+
+function togglePlan(date, idx) {
+  let doneSet = LSG('plan_done_'+date, []);
+  if (doneSet.includes(idx)) doneSet = doneSet.filter(i => i !== idx);
+  else doneSet.push(idx);
+  LSS('plan_done_'+date, doneSet);
+  renderPlan();
+}
+
+function addTodo() {
+  const input = document.getElementById('todo-input');
+  const val = input.value.trim();
+  if (!val) return;
+  const tasks = getPlan(planViewDate);
+  tasks.push(val);
+  savePlan(planViewDate, tasks);
+  input.value = '';
+  renderPlan();
+  showToast('已添加：'+val);
+}
+
+function delPlan(date, idx) {
+  const tasks = getPlan(date);
+  if (tasks.length <= 1) { showToast('至少保留一项任务'); return; }
+  tasks.splice(idx, 1);
+  savePlan(date, tasks);
+  let doneSet = LSG('plan_done_'+date, []);
+  doneSet = doneSet.filter(i => i !== idx).map(i => i > idx ? i-1 : i);
+  LSS('plan_done_'+date, doneSet);
+  renderPlan();
+}
+
+// ===================== 2. 选题灵感 =====================
+const INSPO_POOL = [
+  { title: '边读研边备考的一天vlog', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%9C%A8%E8%81%8C%E8%AF%BB%E7%A0%94%E9%9B%85%E6%80%9D%E5%A4%87%E8%80%83vlog', reason: '真实的冲突感——在职读研+备考的双重压力呈现，引发同样处境人群的强烈共鸣，评论区大量讨论时间管理。', idea: '【创作思路】拍摄你的一天从早到晚的时间线：6:30起床→7:00英语听力→8:30通勤路上多邻国→工作间隙复习→晚上听课写作业。突出"时间挤压下的自律"，结尾加一句你坚持的理由。标题可写"28岁，读研+备考+上班，我的一天怎么过的"。' },
+  { title: '雅思口语备考30天计划公开', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E9%9B%85%E6%80%9D%E5%8F%A3%E8%AF%AD%E5%A4%87%E8%80%8330%E5%A4%A9%E8%AE%A1%E5%88%92', reason: '备考计划类内容长期有搜索流量，30天结构感强、可追更，配合真实分数变化更有说服力。', idea: '【创作思路】制作一个30天打卡表格视频：每天做什么练习、当天的口语分数自评、遇到的困难。每3天做一次小结。封面用"30天雅思口语从5.5到7，我是这样练的"吸引点击。' },
+  { title: '工作后再回学校读书是什么体验', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%B7%A5%E4%BD%9C%E5%90%8E%E8%AF%BB%E7%A0%94%E4%BD%93%E9%AA%8C', reason: '职场人重返校园的话题热度长期不减，身份切换的尴尬、同学年龄差、工作学习平衡都容易引发讨论。', idea: '【创作思路】拍一个"工作后再读研的5个真相"：同学比你小5岁、小组作业全靠线上、周末不是休息是上课、导师理解你但公司不一定…每个真相配一段真实经历，节奏轻快，不加滤镜保持真实感。' },
+  { title: '我的通勤时间管理法：1h路程学3样东西', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E9%80%9A%E5%8B%A4%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86%E5%AD%A6%E4%B9%A0', reason: '通勤是打工人的痛点也是机会点，1小时的高效利用方法天然吸引收藏，实用性强。', idea: '【创作思路】拍一段地铁上的学习实录：前20min听英语播客/Blind Listening→中间20min多邻国打卡→最后20min看MPA课程笔记。用分屏或字幕标注每个时间段在做什么，配合轻快的BGM。标题"北京通勤1小时，我学了3样东西"。' },
+  { title: '非全硕士的真实含金量｜值不值得读', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E9%9D%9E%E5%85%A8%E6%97%A5%E5%88%B6%E7%A1%95%E5%A3%AB%E5%90%AB%E9%87%91%E9%87%8F', reason: '非全硕士的争议性话题自带流量，结合自身经历输出有信息量的观点，评论区容易形成讨论。', idea: '【创作思路】从5个维度分析：学费性价比、时间投入、人脉价值、学历认可度、对职业的帮助。每个维度给真实打分（比如时间投入★★★★★但学历认可度★★★），最后给出"什么人适合读"的建议。' },
+  { title: '学习vlog博主的手机桌面大公开', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%AD%A6%E4%B9%A0%E5%8D%9A%E4%B8%BB%E6%89%8B%E6%9C%BA%E6%A1%8C%E9%9D%A2', reason: '桌面/APP推荐类内容收藏率极高，展示工具使用方式能建立专业形象，同时给观众实用价值。', idea: '【创作思路】录屏展示手机桌面：学习类APP分区（多邻国/不背单词/BBC Learning English）、效率工具分区、碎片阅读分区。每个APP点开演示10秒核心功能，最后放一张桌面壁纸供下载（引流关注）。' },
+  { title: '雅思听力7.5分训练方法全分享', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E9%9B%85%E6%80%9D%E5%90%AC%E5%8A%9B%E8%AE%AD%E7%BB%83%E6%96%B9%E6%B3%95', reason: '雅思各科提分方法是搜索量最大的备考内容之一，"听力"是中国人相对容易提分的科目，受众广泛。', idea: '【创作思路】分三个阶段讲：基础期→精听+听写，提升期→倍速+盲听，冲刺期→模考+错题复盘。每个阶段给出具体每天做什么、用什么材料。中间穿插你的练习片段（比如一段盲听练习画面），增强真实感。' },
+  { title: '28岁女生的晚间自律routine', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E6%99%9A%E9%97%B4%E8%87%AA%E5%BE%8B%E6%97%A5%E5%B8%B8vlog', reason: '自律类内容长盛不衰，晚间routine氛围感强、适合沉浸式拍摄，容易获得完播率。', idea: '【创作思路】从下班到家开始拍摄：换居家服→准备简单晚餐→边吃边看英语视频→写MPA作业/复习→护肤→睡前阅读。画面配轻音乐和字幕，不配音或少配音，强调环境氛围。标题"28岁女生下班后的3小时，安静但充实"。' },
+  { title: '用多邻国学英语一年后的真实变化', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%A4%9A%E9%82%BB%E5%9B%BD%E5%AD%A6%E8%8B%B1%E8%AF%AD%E4%B8%80%E5%B9%B4', reason: '打卡类内容的"结果展示"是最强的转化钩子，真实数据比说教更有说服力，多邻国本身就是热门话题。', idea: '【创作思路】展示多邻国365天连续打卡截图→对比一年前和现在的英语水平（可以用同一段听力的理解程度做对比）→分享每天坚持的小技巧→最后鼓励观众从今天开始。封面用"坚持多邻国365天后，我的英语变了"。' },
+  { title: '我的雅思备考资料红黑榜', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E9%9B%85%E6%80%9D%E5%A4%87%E8%80%83%E8%B5%84%E6%96%99%E6%8E%A8%E8%8D%90', reason: '红黑榜形式信息密度高、节奏快，观众爱看"帮排雷"的内容，评论区会补充自己的体验形成讨论。', idea: '【创作思路】把用过的备考资料分三类：必入✅（剑桥真题/王陆语料库）、可入🟡（顾家北写作/Simon网课）、别买❌（某些过于简单或过时的资料）。每个给30秒点评，说清楚好在哪里/差在哪里。节奏要快，2分钟内讲完。' },
+  { title: '在职读研：如何平衡工作和学业', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%9C%A8%E8%81%8C%E8%AF%BB%E7%A0%94%E5%B9%B3%E8%A1%A1%E5%B7%A5%E4%BD%9C', reason: '平衡问题是所有在职学习者的核心痛点，"术"层面的方法提供直接价值，"道"层面的心态分享引发共鸣。', idea: '【创作思路】开头直接抛出你的真实困境（比如"有一次deadline撞上出差，我在酒店大堂写到凌晨2点"），然后讲你的3个核心策略：①固定时间块（周末上午雷打不动学习）②降低完美主义（及格就好，不要每门都争A）③和领导坦诚沟通。结尾鼓励同样处境的人。' },
+  { title: '北京打工人的周末学习日常', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%8C%97%E4%BA%AC%E6%89%93%E5%B7%A5%E4%BA%BA%E5%91%A8%E6%9C%ABvlog', reason: '周末vlog是生活类热门内容，城市+职业+生活方式的组合让内容有辨识度和代入感。', idea: '【创作思路】周末两天浓缩成3分钟：周六上午上MPA课（拍课堂环境但不透露具体信息）→下午去咖啡厅做雅思真题→晚上和朋友吃饭。周日上午运动→下午拍视频/剪视频→晚上准备下周工作。节奏松弛但有序，强调"学习是为了更好的生活，不是生活的全部"。' },
+  { title: '雅思口语Part2万能素材库分享', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E9%9B%85%E6%80%9D%E5%8F%A3%E8%AF%ADpart2%E7%B4%A0%E6%9D%90', reason: '备考技巧类内容的收藏量远超普通vlog，素材库类内容解决的是考生最头疼的"没话说"问题。', idea: '【创作思路】分享你准备的5个万能素材：一个人（你的导师）、一个地方（你备考的咖啡厅）、一个经历（边工作边备考）、一个物品（你的学习计划本）、一个事件（第一次模考）。每个素材讲30秒英文示范+1分钟中文解析如何套用到不同题目。' },
+  { title: '我的桌面学习装备分享', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%AD%A6%E4%B9%A0%E6%A1%8C%E9%9D%A2%E8%A3%85%E5%A4%87', reason: '桌面分享是高频爆款内容，展示设备既能满足观众好奇心又能带货/种草，拍摄难度低、出片率高。', idea: '【创作思路】全景展示你的学习桌→逐一介绍：iPad（做笔记/看网课）、降噪耳机（专注必备）、计时器（番茄钟）、阅读架、护眼灯。每个设备说"用了多久+最推荐的功能+大概价位"。最后一镜展示桌面全貌，给观众做壁纸参考。' },
+  { title: '打工人早起学习200天变化', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E6%89%93%E5%B7%A5%E4%BA%BA%E6%97%A9%E8%B5%B7%E5%AD%A6%E4%B9%A0%E5%8F%98%E5%8C%96', reason: '变化类内容天然具有"结果前置"的吸引力，时间跨度越大说服力越强，评论区容易讨论自己的早起经历。', idea: '【创作思路】开头放对比：200天前的起不来床 vs 现在的自然醒→展示具体变化（英语从磕巴到流利、多邻国从零到高级、读完了几本书）→分享早起技巧：①早睡是根本②把闹钟放远处③起来第一件事做喜欢的（比如听音乐+拉伸）。' },
+  { title: '雅思备考人的一天饮食/生活全记录', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%A4%87%E8%80%83%E6%97%A5%E5%B8%B8vlog', reason: '沉浸式日常是生活vlog的基石内容，备考+生活的组合覆盖两类人群（备考党+生活方式爱好者）。', idea: '【创作思路】纯粹的一天记录，不刻意讲道理：早餐吃什么→通勤路上听什么→工作间隙偷偷看什么→午饭怎么吃→下班后去哪学习→学到几点回家。画面用温暖色调，加柔和的轻音乐和少量字幕。让观众觉得"原来备考也可以过得这么舒服"。' },
+  { title: '研究生课堂笔记方法大公开', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E7%A0%94%E7%A9%B6%E7%94%9F%E7%AC%94%E8%AE%B0%E6%96%B9%E6%B3%95', reason: '笔记方法类内容收藏率极高，展示了学习方法论即可建立专业学习人设，评论区容易分享自己的方法。', idea: '【创作思路】翻看你的真实笔记（注意不暴露课程和学校具体信息），讲解你的笔记体系：①课前预习用思维导图②课上用iPad手写重点③课后用Notion整理成知识库。展示具体例子（打码处理），最后总结3个让笔记更好用的技巧。' },
+  { title: '学习vlog博主的周计划怎么做', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%91%A8%E8%AE%A1%E5%88%92%E5%88%B6%E4%BD%9C', reason: '计划类内容兼具实用性和观赏性，手写计划的过程画面感强，成品可以作为封面图吸引点击。', idea: '【创作思路】展示你做周计划的完整过程：①先回顾上周完成情况②列出本周学习目标（雅思/MPA/工作各一块）③分配到每天的具体时间段④留出弹性空间。可以一边写一边轻声讲解，画面从上方拍摄本子，保持手写的过程感。' },
+  { title: '28岁重新学英语，我后悔太晚了', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E6%88%90%E5%B9%B4%E4%BA%BA%E5%AD%A6%E8%8B%B1%E8%AF%AD%E7%BB%8F%E9%AA%8C', reason: '"后悔体"标题自带悬念，成年人学英语是长尾话题，你的真实故事可以作为系列内容持续产出。', idea: '【创作思路】先讲为什么28岁才认真学英语（可能之前觉得够用、想留学、工作需要等）→然后讲重新开始的困难（记忆力不如以前、时间碎片化、发音纠正难）→再讲你的方法和进展→最后鼓励同样年龄的人"现在开始就是最好的时候"。' },
+  { title: 'MPA在读生的真实课表与学习日常', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/MPA%E5%9C%A8%E8%AF%BB%E6%97%A5%E5%B8%B8', reason: 'MPA是相对小众但受众精准的话题，搜索这个词的用户都是潜在同路人，内容容易建立深度连接。', idea: '【创作思路】展示你的一周课表安排（不透露具体学校和课程名）→分享MPA学习中让你印象最深的一个概念或案例→对比"想象中的公共管理"和"实际学的公共管理"有什么不同→结尾问问弹幕有没有同专业的。' },
+];
+
+function getTodayInspo() {
+  const k = 'inspo_'+td();
+  const c = LSK(k);
+  if (c) return JSON.parse(c);
+  const selected = pick(INSPO_POOL, 10, td()+'_inspo');
+  LSS(k, selected);
+  // Archive
+  let archive = LSG('inspo_archive', {});
+  archive[td()] = selected;
+  LSS('inspo_archive', archive);
+  return selected;
+}
+
+function collectInspirations() {
+  const k = 'inspo_'+td();
+  localStorage.removeItem('ll_'+k);
+  const inspo = getTodayInspo();
+  renderInspoList(inspo);
+  showToast('✅ 已采集 10 条今日热点');
+}
+
+function renderInspoPage() {
+  const inspo = getTodayInspo();
+  renderInspoList(inspo);
+  // History
+  const archive = LSG('inspo_archive', {});
+  const dates = Object.keys(archive).sort().reverse().slice(1, 8); // past 7 days excluding today
+  const hist = document.getElementById('inspo-history');
+  if (dates.length === 0) { hist.innerHTML = ''; return; }
+  hist.innerHTML = `<details style="margin-top:12px;"><summary class="history-toggle">📅 历史灵感 (${dates.length} 天)</summary><div style="margin-top:8px;">`+
+    dates.map(d => `<div style="font-size:13px;color:var(--t2);margin-bottom:4px;"><strong>${fmtDate(d)}</strong> — ${archive[d].length} 条灵感</div>`).join('')+
+    `</div></details>`;
+}
+
+function renderInspoList(inspo) {
+  const container = document.getElementById('inspo-list');
+  container.innerHTML = inspo.map((item, i) => `
+    <div class="inspo-item">
+      <div class="inspo-title">${i+1}. ${esc(item.title)}</div>
+      <div class="tag-row"><span class="tag tag-blue">${esc(item.platform)}</span></div>
+      <div class="inspo-reason"><strong>🔥 火爆原因：</strong>${esc(item.reason)}</div>
+      <div class="inspo-idea">${item.idea}</div>
+      <div style="margin-top:4px;">
+        <a href="${item.link}" target="_blank" class="link-btn">🔗 看相关视频 →</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===================== 3. 爆款二创 =====================
+const RECRE_POOL = [
+  { title: '当打工人决定重新养自己一遍', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E9%87%8D%E6%96%B0%E5%85%BB%E8%87%AA%E5%B7%B1%E4%B8%80%E9%81%8D', reason: '"重新养自己"是今年的情绪爆款概念，结合学习成长类内容天然合理，容易引发女性观众共鸣。', script: '【二创脚本·贴合Luminous人设】\n开场（前3秒）："28岁，我决定重新养自己一遍"\n→画面：翻开雅思真题、打开多邻国app\n中段：展示你在养的三个"自己"\n①身体：每天运动30分钟（拍运动画面）\n②大脑：每天学英语+读研（拍学习画面）\n③心灵：每天记录一件开心小事（拍写日记/工作台）\n结尾："你也在重新养自己吗？"\nBGM：轻柔钢琴曲\n时长：60-90秒' },
+  { title: '你有多自律就有多自由', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E8%87%AA%E5%BE%8B%E8%87%AA%E7%94%B1vlog', reason: '自律口号类内容在清晨推送时段表现最佳，配合真实的时间线展示，说服力强。', script: '【二创脚本·贴合Luminous人设】\n调性：不鸡血、不焦虑、温柔坚定\n开场："自律不是虐待自己，是对自己负责"\n→时间线快剪：6:30起床/7:00听力/通勤学英语/晚上上课\n正文：展示你自律的3个小秘密\n①前一天晚上准备好第二天的一切（衣服/书包/学习计划）\n②把大目标拆成每天的小动作（今天只做30分钟听力）\n③允许自己偶尔偷懒，但第二天必须补回来\n结尾画面：深夜台灯下合上书本，字幕浮现"明天见，更好的自己"' },
+  { title: '打工人的学习角落大改造', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%AD%A6%E4%B9%A0%E8%A7%92%E8%90%BD%E6%94%B9%E9%80%A0', reason: '空间改造类内容画面感强、容易出片，前后对比的冲击力带来高互动。', script: '【二创脚本·贴合Luminous人设】\n开场（前3秒）：Before → After 的对比画面\n正文：分3个区域改造\n①书桌区：iPad支架+阅读架+台灯+绿植（预算300以内）\n②墙面区：软木板+周计划表+鼓励自己的便利贴（预算50以内）\n③收纳区：桌面收纳盒分3格（雅思资料/MPA资料/杂物）\n结尾：坐在改造好的角落开始学习，字幕"终于有一个属于自己的地方了"\nBGM：轻快独立音乐\n彩蛋：附购买链接清单在评论区' },
+  { title: '备考人请停止无效努力', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E5%A4%87%E8%80%83%E6%96%B9%E6%B3%95%E8%AE%BA', reason: '"停止无效XX"的标题格式自带点击欲，方法论内容收藏率高，受众精准。', script: '【二创脚本·贴合Luminous人设】\n开场："备考雅思3个月后，我发现很多努力都是无效的"\n正文：分享你踩过的3个坑\n坑①：每天背100个单词但没有语境 → 改进：读文章+做真题中积累\n坑②：疯狂刷题但不复盘 → 改进：做完每套题花同样时间分析\n坑③：一个人闷头学不交流 → 改进：找备考搭子/用AI练口语\n结尾："努力很重要，用对方法的努力更重要"\n结尾引导："你踩过什么备考的坑？评论区说说"' },
+  { title: '把生活过成想要的样子', platform:'小红书', link:'https://www.xiaohongshu.com/search_result/%E7%94%9F%E6%B4%BB%E6%96%B9%E5%BC%8Fvlog', reason: '生活态度类内容是vlog赛道的"定海神针"，不追热点但持续有流量，适合周末发布。', script: '【二创脚本·贴合Luminous人设】\n调性：柔软、治愈、不比较\n全片无配音，用画面+字幕+BGM叙事\n画面序列：\n①晨光照进房间 → 字幕"今天也是在为自己努力的一天"\n②做早餐 → 字幕"好好吃饭是第一要义"\n③学习画面 → 字幕"雅思倒计时XX天"\n④运动 → 字幕"流汗比焦虑管用"\n⑤晚上写日记 → 字幕"今天做了XXX，还不错"\n结尾：关灯 → 字幕"明天见"\nBGM：Lofi hiphop 或 吉他纯音乐' },
+];
+
+function getRecreItems() { return LSG('recre', []); }
+
+function renderRecre(filter = 'all') {
+  let items = getRecreItems();
+  if (items.length === 0) {
+    // Init with pool
+    items = RECRE_POOL.map(r => ({...r, status:'可用'}));
+    LSS('recre', items);
+  }
+  if (filter !== 'all') items = items.filter(i => i.status === filter);
+
+  document.getElementById('recre-list').innerHTML = items.map((item, idx) => `
+    <div class="inspo-item">
+      <div class="tag-row">
+        <span class="tag tag-blue">${esc(item.platform)}</span>
+        <span class="tag tag-${item.status==='可用'?'avail':item.status==='待拍摄'?'shoot':'done-tag'}"
+              onclick="cycleRecreStatus(${idx},'${item.status}')">${item.status==='可用'?'✅ 可用':item.status==='待拍摄'?'📋 待拍摄':'🎬 已拍摄'}</span>
+      </div>
+      <div class="inspo-title">${esc(item.title)}</div>
+      <div class="inspo-reason"><strong>🔥 火爆原因：</strong>${esc(item.reason)}</div>
+      <div class="inspo-idea">${esc(item.script)}</div>
+      <a href="${item.link}" target="_blank" class="link-btn">🔗 查看原视频 →</a>
+    </div>
+  `).join('') || '<div style="text-align:center;color:var(--t2);padding:20px;">暂无该状态的素材</div>';
+}
+
+function cycleRecreStatus(idx, current) {
+  const items = getRecreItems();
+  const next = current === '可用' ? '待拍摄' : current === '待拍摄' ? '已拍摄' : '可用';
+  items[idx].status = next;
+  LSS('recre', items);
+  renderRecre();
+  showToast('状态已更新：'+next);
+}
+
+function filterRecre(f) { renderRecre(f); }
+
+// ===================== 4. 内容复盘 =====================
+function getReviews() { return LSG('reviews', []); }
+
+function addReview() {
+  const title = document.getElementById('rv-title').value.trim();
+  const views = parseInt(document.getElementById('rv-views').value) || 0;
+  const likes = parseInt(document.getElementById('rv-likes').value) || 0;
+  const comments = parseInt(document.getElementById('rv-comments').value) || 0;
+  const shares = parseInt(document.getElementById('rv-shares').value) || 0;
+  const retention = parseInt(document.getElementById('rv-retention').value) || 0;
+  const source = document.getElementById('rv-source').value;
+  const date = document.getElementById('rv-date').value || td();
+  if (!title) { showToast('请填写作品标题'); return; }
+
+  // Auto-diagnosis
+  const issues = [];
+  if (retention < 30) issues.push('⚠️ 完播率低于30%：优化视频前3秒前置钩子，第一句话就要制造悬念或冲突');
+  else if (retention < 50) issues.push('📌 完播率偏低：检查中间段内容是否拖沓，可尝试每10秒一个信息点/画面切换');
+  if (likes > 0 && views > 0 && (likes/views*100) < 2) issues.push('📌 点赞率偏低：内容是否有足够的"爽点"或"实用价值"？观众觉得不够好就不会点赞');
+  if (comments < 5) issues.push('💬 评论数少：在视频结尾明确设置互动提问，引导观众留言（如"你有什么备考妙招？"）');
+  if (shares < 3) issues.push('📤 转发数低：增加"值得转发给朋友"的内容，比如实用干货、共鸣金句');
+  if (source && source !== '推荐') issues.push(`📌 流量来自"${source}"而非"推荐"：优化封面图和标题关键词，提升被推荐的概率`);
+  if (issues.length === 0) issues.push('✅ 各项指标表现不错！继续保持内容节奏和选题方向');
+
+  const review = { title, views, likes, comments, shares, retention, source, date, issues, createdAt: td() };
+  const reviews = getReviews();
+  reviews.unshift(review);
+  LSS('reviews', reviews);
+  renderReviews();
+  showToast('已保存并诊断');
+  // Clear form
+  ['rv-title','rv-views','rv-likes','rv-comments','rv-shares','rv-retention'].forEach(id => document.getElementById(id).value='');
+}
+
+function renderReviews() {
+  const reviews = getReviews();
+  document.getElementById('review-list').innerHTML = reviews.map((r, i) => `
+    <div class="review-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong>${esc(r.title)}</strong>
+        <span style="font-size:11px;color:var(--t2);">${fmtDate(r.date)}</span>
+        <span style="font-size:12px;color:var(--d);cursor:pointer;" onclick="delReview(${i})">删除</span>
+      </div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--t2);margin:8px 0;flex-wrap:wrap;">
+        <span>▶️ ${r.views}</span><span>❤️ ${r.likes}</span><span>💬 ${r.comments}</span>
+        <span>🔄 ${r.shares}</span><span>📊 ${r.retention}%</span><span>📡 ${r.source}</span>
+      </div>
+      ${r.issues.map(iss => `<div style="font-size:12px;padding:6px 0;border-top:1px solid var(--border);">${esc(iss)}</div>`).join('')}
+    </div>
+  `).join('') || '<div style="text-align:center;color:var(--t2);padding:20px;">还没有复盘记录，发布作品后回来填写吧</div>';
+}
+
+function delReview(idx) {
+  const reviews = getReviews();
+  reviews.splice(idx, 1);
+  LSS('reviews', reviews);
+  renderReviews();
+}
+
+// ===================== 5. 英语学习 =====================
+const ENG_ARTICLES = [
+  { id:'a1', title:'The Rise of Digital Nomads', cat:'科技生活', level:'B2-C1', sentences:[
+    {en:'The rise of digital nomads has transformed the way we think about work.',zh:'数字游民的兴起改变了我们对工作的认知。'},
+    {en:'More people are choosing to work remotely while traveling the world.',zh:'越来越多的人选择边环游世界边远程工作。'},
+    {en:'All you need is a laptop and a reliable internet connection.',zh:'你只需要一台笔记本电脑和可靠的网络连接。'},
+    {en:'However, this lifestyle also comes with challenges, such as loneliness and time zone issues.',zh:'然而，这种生活方式也伴随着挑战，比如孤独感和时区问题。'},
+    {en:'Many digital nomads say the freedom far outweighs the difficulties.',zh:'许多数字游民表示，自由远大于困难。'},
+    {en:'Countries like Portugal and Thailand now offer special visas for remote workers.',zh:'葡萄牙和泰国等国家现在为远程工作者提供特殊签证。'},
+    {en:'Co-working spaces have sprung up in cities around the world.',zh:'世界各地城市里的共享办公空间如雨后春笋般出现。'},
+    {en:'This trend shows no sign of slowing down.',zh:'这一趋势���无减缓迹象。'}
+  ], vocab:[
+    {w:'remote',m:'远程的'},{w:'reliable',m:'可靠的'},{w:'outweigh',m:'超过'},{w:'transform',m:'转变'},{w:'freedom',m:'自由'},{w:'spring up',m:'涌现'}
+  ]},
+  { id:'a2', title:'How Mindfulness Changes Your Brain', cat:'健康心理', level:'B2-C1', sentences:[
+    {en:'Mindfulness meditation has been practiced for thousands of years.',zh:'正念冥想已经实践了数千年。'},
+    {en:'Recent scientific studies show that it can physically change the structure of your brain.',zh:'最近的科学研究表明，它能从物理层面改变大脑结构。'},
+    {en:'Just eight weeks of regular practice can increase grey matter in areas linked to learning and memory.',zh:'仅八周的规律练习就能增加与学习和记忆相关区域的灰质。'},
+    {en:'It also reduces the size of the amygdala, the brain\'s fear and stress centre.',zh:'它还能缩小杏仁核——大脑的恐惧和压力中枢。'},
+    {en:'Many companies now offer mindfulness training to their employees to reduce burnout.',zh:'许多公司现在为员工提供正念培训以减少职业倦怠。'},
+    {en:'The key is consistency — even ten minutes a day can make a noticeable difference.',zh:'关键在于坚持——即使每天十分钟也能产生明显变化。'},
+    {en:'Mindfulness teaches us to observe our thoughts without judgment.',zh:'正念教会我们不评判地观察自己的思绪。'},
+    {en:'This simple practice improves focus and reduces anxiety.',zh:'这项简单的练习可以提升专注力、减少焦虑。'}
+  ], vocab:[
+    {w:'meditation',m:'冥想'},{w:'structure',m:'结构'},{w:'grey matter',m:'灰质'},{w:'amygdala',m:'杏仁核'},{w:'burnout',m:'职业倦怠'},{w:'consistency',m:'坚持'}
+  ]},
+  { id:'a3', title:'The Future of Renewable Energy', cat:'科技环保', level:'B2-C1', sentences:[
+    {en:'Renewable energy sources like solar and wind are growing faster than ever before.',zh:'太阳能和风能等可再生能源的增长速度前所未有。'},
+    {en:'Last year, renewables accounted for over 30% of global electricity generation.',zh:'去年可再生能源占全球发电量的30%以上。'},
+    {en:'The cost of solar panels has dropped by nearly 90% in the past decade.',zh:'太阳能电池板的成本在过去十年下降了近90%。'},
+    {en:'Battery technology is also improving, making it easier to store energy.',zh:'电池技术也在进步，使得储存能源更容易。'},
+    {en:'Countries around the world are investing billions in green infrastructure.',zh:'世界各国正向绿色基础设施投入数十亿美元。'},
+    {en:'Experts warn that the transition needs to happen much faster.',zh:'专家警告说转型需要更快才能避免最坏影响。'},
+    {en:'Innovative projects like floating solar farms push the boundaries.',zh:'漂浮式太阳能农场等创新项目正在突破极限。'},
+    {en:'The future of energy is clean but requires global cooperation.',zh:'能源的未来是清洁的，但这需要全球合作。'}
+  ], vocab:[
+    {w:'renewable',m:'可再生的'},{w:'generation',m:'发电'},{w:'solar panel',m:'太阳能电池板'},{w:'infrastructure',m:'基础设施'},{w:'transition',m:'转型'},{w:'innovative',m:'创新的'}
+  ]},
+  { id:'a4', title:'The Psychology of Habit Formation', cat:'自我提升', level:'B2-C1', sentences:[
+    {en:'Habits are the invisible architecture of daily life.',zh:'习惯是日常生活的隐形架构。'},
+    {en:'Research suggests it takes an average of 66 days to form a new habit.',zh:'研究表明，平均需要66天才能形成一个新习惯。'},
+    {en:'The key is to start small and be consistent rather than aiming for perfection.',zh:'关键是从小处着手并保持一致，而不是追求完美。'},
+    {en:'Willpower is like a muscle — it gets tired with use but strengthens with practice.',zh:'意志力就像肌肉——使用后会疲劳，但练习后会变强。'},
+    {en:'Environmental design often matters more than motivation.',zh:'环境设计往往比动力更重要。'},
+    {en:'If you want to read more, put a book on your pillow each morning.',zh:'如果你想多读书，每天早晨把一本书放在你的枕头上。'},
+    {en:'Tracking your progress visually can boost your commitment significantly.',zh:'可视化追踪进度能显著增强你的承诺感。'},
+    {en:'The most successful habit-builders focus on identity rather than outcomes.',zh:'最成功的习惯建立者关注的是身份认同而非结果。'}
+  ], vocab:[
+    {w:'invisible',m:'隐形的'},{w:'consistent',m:'一致的'},{w:'willpower',m:'意志力'},{w:'motivation',m:'动力'},{w:'environmental',m:'环境的'},{w:'commitment',m:'承诺'}
+  ]},
+  { id:'a5', title:'Why Sleep is the Ultimate Productivity Tool', cat:'健康生活', level:'B2-C1', sentences:[
+    {en:'Sleep is often the first thing we sacrifice when life gets busy.',zh:'当生活变得忙碌时，睡眠往往是我们最先牺牲的东西。'},
+    {en:'Yet science shows that lack of sleep dramatically impairs cognitive function.',zh:'然而科学显示，缺乏睡眠会严重影响认知功能。'},
+    {en:'During deep sleep, the brain clears out toxins that accumulate during the day.',zh:'在深度睡眠期间，大脑会清除白天积累的毒素。'},
+    {en:'People who sleep less than six hours a night perform significantly worse on memory tests.',zh:'每晚睡眠少于六小时的人在记忆测试中表现明显更差。'},
+    {en:'The ideal amount for most adults is between seven and nine hours.',zh:'大多数成年人的理想睡眠时间是七到九小时。'},
+    {en:'A consistent sleep schedule is even more important than the total duration.',zh:'固定的睡眠时间表比总时长更重要。'},
+    {en:'Avoiding screens for an hour before bed can dramatically improve sleep quality.',zh:'睡前半小时不看屏幕可以显著改善睡眠质量。'},
+    {en:'Think of sleep not as wasted time but as an investment in tomorrow\'s performance.',zh:'不要把睡眠视为浪费时间，而是对明天表现的投资。'}
+  ], vocab:[
+    {w:'sacrifice',m:'牺牲'},{w:'impair',m:'损害'},{w:'cognitive',m:'认知的'},{w:'toxins',m:'毒素'},{w:'accumulate',m:'积累'},{w:'duration',m:'持续时间'}
+  ]},
+  { id:'a6', title:'The Art of Learning a Language as an Adult', cat:'学习方法', level:'B2-C1', sentences:[
+    {en:'Many people believe that children are naturally better at learning languages.',zh:'许多人认为儿童天生更擅长学习语言。'},
+    {en:'However, adults actually have several advantages that children lack.',zh:'然而，成年人实际上有几个儿童没有的优势。'},
+    {en:'Adults can understand complex grammar rules and apply them systematically.',zh:'成年人能理解复杂的语法规则并系统性地应用。'},
+    {en:'They also have better metacognitive skills, meaning they know how they learn best.',zh:'他们还有更好的元认知能力，这意味着他们知道自己最有效的学习方式。'},
+    {en:'The biggest obstacle for adult learners is not ability but fear of making mistakes.',zh:'成年人学习最大的障碍不是能力，而是害怕犯错。'},
+    {en:'Immersion is key — try to surround yourself with the language as much as possible.',zh:'沉浸是关键——尽量让自己被语言包围。'},
+    {en:'Even 15 minutes of daily practice beats 3 hours once a week.',zh:'即使每天15分钟的练习也胜过每周集中3小时。'},
+    {en:'The best language learners embrace embarrassment and keep speaking anyway.',zh:'最好的语言学习者接受尴尬，并坚持开口说。'}
+  ], vocab:[
+    {w:'advantage',m:'优势'},{w:'metacognitive',m:'元认知的'},{w:'obstacle',m:'障碍'},{w:'immersion',m:'沉浸'},{w:'embrace',m:'拥抱；接受'},{w:'embarrassment',m:'尴尬'}
+  ]},
+  { id:'a7', title:'How Exercise Boosts Your Brain Power', cat:'健康科学', level:'B2-C1', sentences:[
+    {en:'We all know exercise is good for the body, but it\'s equally important for the brain.',zh:'我们都知道运动对身体好，但它对大脑同样重要。'},
+    {en:'Physical activity increases blood flow to the brain, delivering oxygen and nutrients.',zh:'体力活动增加流向大脑的血液，输送氧气和营养。'},
+    {en:'Just 30 minutes of moderate exercise can improve focus for the next two hours.',zh:'仅30分钟的中���强度运动就能提升接下来两小时的专注力。'},
+    {en:'Exercise stimulates the release of a protein called BDNF, which supports neuron growth.',zh:'运动刺激释放一种叫BDNF的蛋白质，它支持神经元生长。'},
+    {en:'Regular exercise has been linked to a reduced risk of dementia in later life.',zh:'规律运动与晚年患痴呆症的风险降低有关。'},
+    {en:'You don\'t need to run a marathon — a brisk walk is enough to see benefits.',zh:'你不需要跑马拉松——快步走就足以看到好处。'},
+    {en:'The best exercise is the one you enjoy and will actually do consistently.',zh:'最好的运动是你喜欢的、能真正坚持的运动。'},
+    {en:'Think of exercise as a non-negotiable part of your daily routine, like brushing your teeth.',zh:'把运动视为日常生活中不可妥协的一部分，就像刷牙一样。'}
+  ], vocab:[
+    {w:'physical',m:'身体的'},{w:'oxygen',m:'氧气'},{w:'nutrient',m:'营养'},{w:'stimulate',m:'刺激'},{w:'dementia',m:'痴呆'},{w:'non-negotiable',m:'不可妥协的'}
+  ]},
+  { id:'a8', title:'The Future of Work: Remote, Hybrid, or Office?', cat:'职场趋势', level:'B2-C1', sentences:[
+    {en:'The pandemic permanently changed how and where we work.',zh:'疫情永久改变了我们工作的方式和地点。'},
+    {en:'Many companies are now experimenting with hybrid models, combining office and remote days.',zh:'许多公司正在尝试混合模式，结合办公室和远程工作日。'},
+    {en:'Studies show that remote workers are often more productive but may feel more isolated.',zh:'研究表明远程工作者通常更高效但可能感到更孤独。'},
+    {en:'The biggest challenge for remote teams is maintaining strong communication and culture.',zh:'远程团队最大的挑战是保持良好的沟通和文化。'},
+    {en:'Some companies have gone fully remote, allowing employees to work from anywhere.',zh:'一些公司已完全远程化，允许员工在任何地方工作。'},
+    {en:'Others insist that in-person collaboration is essential for creativity and innovation.',zh:'其他公司坚持认为面对面的协作对创造力和创新至关重要。'},
+    {en:'The debate is far from settled, and the future likely involves flexibility.',zh:'争论远未结束，未来可能涉及灵活性。'},
+    {en:'The most successful organizations will be those that give employees real choice.',zh:'最成功的组织将是那些给员工真正选择权的组织。'}
+  ], vocab:[
+    {w:'pandemic',m:'疫情'},{w:'hybrid',m:'混合的'},{w:'productive',m:'高效的'},{w:'isolated',m:'孤独的'},{w:'collaboration',m:'协作'},{w:'flexibility',m:'灵活性'}
+  ]},
+];
+
+const SPEAK_PART1_TOPICS = [
+  'Work & Studies','Hometown','Home & Accommodation','Food & Cooking','Travel & Holidays',
+  'Music & Entertainment','Technology & Social Media','Sports & Exercise','Books & Reading','Weather & Seasons'
+];
+const SPEAK_PART1_QUESTIONS = {
+  'Work & Studies': [
+    {q:'Do you work or are you a student?',a:'I\'m actually doing both — I work full-time as an engineer and I\'m also pursuing a part-time master\'s degree. It\'s quite demanding, but I genuinely enjoy the balance between practical work and academic learning. The two complement each other in ways I hadn\'t expected.'},
+    {q:'Why did you choose your current job?',a:'I chose this field because I\'ve always been fascinated by how things work at a fundamental level. There\'s something deeply satisfying about solving complex problems that have real-world impact. Plus, the continuous learning aspect keeps me engaged.'},
+    {q:'Do you enjoy your work?',a:'Absolutely. Despite the inevitable challenges, I find it incredibly rewarding. Every day presents new problems to solve, and I love the intellectual stimulation. That said, I do make a conscious effort to maintain work-life balance, especially with my studies.'},
+    {q:'What would you like to change about your job?',a:'If I could change one thing, it would probably be having more flexibility in terms of working hours. Some days I\'m incredibly productive in the morning, other days in the evening, and a rigid schedule doesn\'t always accommodate that natural rhythm.'}
+  ],
+  'Food & Cooking': [
+    {q:'What kind of food do you like?',a:'I\'m quite adventurous when it comes to food. I particularly enjoy Asian cuisine — the balance of flavors, the variety of textures. But honestly, I appreciate good food regardless of its origin. I also try to maintain a relatively healthy diet since I exercise regularly.'},
+    {q:'Do you enjoy cooking?',a:'I do, though I wouldn\'t call myself an expert. Cooking is almost meditative for me — it\'s a chance to unplug from screens and focus on something tangible. I find it particularly satisfying after a long day of mental work.'},
+    {q:'What meal do you cook most often?',a:'Probably a simple stir-fry with whatever vegetables I have in the fridge. It\'s quick, healthy, and versatile. I\'ve gotten quite efficient at it — I can have a decent meal ready in about 20 minutes.'},
+    {q:'Do you prefer eating at home or in restaurants?',a:'I appreciate both for different reasons. Home cooking gives me control over ingredients and is more budget-friendly. But restaurants offer experiences I can\'t replicate at home, and sometimes it\'s just nice to be served rather than doing the work myself.'}
+  ],
+  'Travel & Holidays': [
+    {q:'Do you like travelling?',a:'I absolutely love it. Travel broadens your perspective in ways that books and videos simply cannot. Every trip teaches me something new — about the world, about people, and about myself.'},
+    {q:'What kind of places do you like to visit?',a:'I\'m drawn to places with rich history and culture. I love wandering through old streets, visiting museums, and trying local food. But I also enjoy nature — mountains, coastlines, anywhere I can disconnect and breathe fresh air.'},
+    {q:'Where did you go on your last trip?',a:'My last trip was a short getaway to a nearby city. It wasn\'t anything extravagant, but it was exactly what I needed — a change of scenery, some good food, and a chance to reset my mind before getting back to my routine.'},
+    {q:'Do you prefer travelling alone or with others?',a:'Both have their merits. Travelling alone gives you complete freedom and forces you to be more present. But travelling with close friends creates shared memories that you can laugh about for years.'}
+  ]
+};
+
+const SPEAK_PART2_CUES = [
+  { topic:'Describe a memorable trip you have taken', hints:['Where you went','Who you went with','What you did there','Why it was memorable'],
+    a:'I\'d like to talk about a trip I took to a coastal city a couple of years ago. It wasn\'t a particularly long or expensive trip, but it left a lasting impression on me. I went there alone, which was actually a deliberate choice — I needed some time to reflect and recharge after a particularly intense period at work and with my studies. I spent my days exploring the old town, walking along the waterfront, and trying every local dish I could find. What made it truly memorable wasn\'t any specific activity, but rather the sense of freedom I felt. For the first time in months, I wasn\'t on anyone else\'s schedule. I woke up when I wanted, ate when I was hungry, and simply followed my curiosity. Looking back, that trip taught me the importance of stepping away from routine to gain perspective.' },
+  { topic:'Describe a person who has influenced you', hints:['Who this person is','How you know them','What they are like','Why they influenced you'],
+    a:'I\'d like to talk about one of my professors from my master\'s programme. I met her during my first semester, and she immediately stood out — not because she was the loudest or most charismatic person in the room, but because of her quiet intensity and genuine passion for the subject. What struck me most was her ability to connect theoretical concepts to real-world problems in a way that made everything click. Beyond academics, she demonstrated something I deeply admire: the ability to be intellectually rigorous without being rigid, to challenge ideas without being confrontational. She influenced me not through dramatic speeches but through consistent example — showing up prepared, asking thoughtful questions, and treating everyone with respect. I try to embody those qualities in my own work and studies.' },
+  { topic:'Describe a skill you would like to learn', hints:['What the skill is','Why you want to learn it','How you plan to learn it','How it would benefit you'],
+    a:'A skill I genuinely want to develop further is public speaking in English. I can communicate perfectly well in everyday conversations and even in professional contexts, but the thought of giving a formal presentation or speaking at a conference still makes me nervous. The reason I want to improve is twofold. Practically, being a confident English speaker opens up so many opportunities — from presenting at international conferences to collaborating more effectively with colleagues from different countries. But more personally, I see it as a form of self-expression. I have ideas and perspectives I want to share, and I don\'t want language anxiety to hold me back. My plan is to practice systematically: starting with short prepared talks, gradually increasing the length and complexity, and eventually moving to impromptu speaking. I\'ve also joined a local Toastmasters-style group for regular practice.' },
+  { topic:'Describe a book that had an impact on you', hints:['What the book is','When you read it','What it is about','Why it impacted you'],
+    a:'The book I want to describe is "Atomic Habits" by James Clear. I read it about a year ago during a period when I was feeling frustrated with my progress in several areas of my life — my English studies, my fitness routine, my master\'s coursework. The book\'s central argument is deceptively simple: small, consistent changes compound into remarkable results over time. What really resonated with me was the idea that you don\'t rise to the level of your goals; you fall to the level of your systems. I had always been goal-oriented, but this book shifted my focus to building better systems. After reading it, I redesigned my study routine around tiny, manageable habits rather than ambitious but unsustainable goals. The results weren\'t dramatic overnight, but over months, the compound effect was undeniable.' },
+  { topic:'Describe a place you would recommend to visitors in your city', hints:['What the place is','Where it is located','What people can do there','Why you recommend it'],
+    a:'If someone visits Beijing, I would absolutely recommend the area around the old city lakes, particularly Houhai and the surrounding hutongs. It\'s not exactly a hidden gem — plenty of tourists go there — but most only skim the surface. What I love about this area is the contrast. You have these centuries-old alleyways alongside modern cafés and boutique shops. Early morning is magical — you\'ll see elderly residents practicing tai chi or walking their birds, while the bars and restaurants are still quiet. By afternoon, it transforms into a lively social hub. What I always tell visitors is: skip the main strips, get lost in the smaller hutongs, and stop for a coffee at one of the rooftop terraces overlooking the lake. It\'s one of the few places in a massive city where you can feel both the weight of history and the pulse of contemporary life.' }
+];
+
+const SPEAK_PART3_QUESTIONS = [
+  { q:'Why do some people find it difficult to maintain a work-life balance?',
+    a:'That\'s an excellent question. I think there are several layers to this. On a practical level, many people simply don\'t have the luxury of choice — financial pressures force them to work long hours. But even among those who do have choice, the boundaries between work and life have blurred, particularly with smartphones — you\'re essentially carrying your office in your pocket. There\'s also a cultural dimension — in many societies, being "busy" is worn as a badge of honour. I think the real challenge is that achieving balance isn\'t a one-time decision but a continuous negotiation that requires both self-awareness and the courage to set boundaries.' },
+  { q:'How has technology changed the way people travel?',
+    a:'Technology has fundamentally transformed travel on multiple levels. The most obvious is convenience — we can book flights, accommodation, and activities with a few taps. But I think the more interesting change is in how we experience travel. On one hand, access to information helps us make more informed choices and discover authentic experiences. On the other hand, there\'s a valid concern that we\'re sometimes more focused on capturing the perfect photo than actually experiencing the moment. I find myself consciously trying to strike a balance — using technology as a tool for discovery while still leaving room for spontaneity and genuine presence.' },
+  { q:'Do you think the education system prepares students well for the real world?',
+    a:'This is a complex issue. I believe the traditional education system excels at teaching foundational knowledge and structured thinking — both of which are genuinely valuable. However, it often falls short in developing skills like critical thinking, financial literacy, emotional intelligence, and adaptability — skills that are increasingly important in a rapidly changing world. I think the ideal approach would combine academic rigour with more emphasis on practical application and soft skills. That\'s actually one reason I value my current situation of working while studying — I get to apply what I learn in real time.' },
+  { q:'What makes a good teacher?',
+    a:'Based on my experience, the best teachers share a few key qualities. First, deep subject knowledge — but that alone isn\'t enough. What truly distinguishes great teachers is their ability to make complex ideas accessible and interesting. They don\'t just transfer information; they ignite curiosity. Second, empathy — understanding where students are struggling and meeting them there. Third, genuine passion for their subject — enthusiasm is contagious. The teachers who influenced me most weren\'t necessarily the ones with the most impressive credentials, but the ones who made me care about what they were teaching.' },
+  { q:'How do you think cities will change in the future?',
+    a:'I think we\'re going to see several significant shifts. Sustainability will be a driving force — greener buildings, more efficient public transport, and better integration of nature into urban spaces. Technology will make cities "smarter" — from traffic management to energy distribution. But I hope we also see a renewed focus on human connection. As more work goes remote, the role of cities might shift from being primarily places of production to places of community and culture. The most successful cities of the future will be those that balance technological efficiency with spaces that foster genuine human interaction.' }
+];
+
+function getTodayEngArticle() {
+  const k = 'eng_article_'+td();
+  const c = LSK(k);
+  if (c) {
+    const id = JSON.parse(c);
+    return ENG_ARTICLES.find(a => a.id === id);
+  }
+  const rand = seededRand(td()+'_eng_art');
+  const idx = Math.floor(rand() * ENG_ARTICLES.length);
+  const selected = ENG_ARTICLES[idx];
+  LSS(k, selected.id);
+  return selected;
+}
+
+function getTodaySpeaking() {
+  const k = 'eng_speaking_'+td();
+  const c = LSK(k);
+  if (c) return JSON.parse(c);
+
+  // Pick 2 Part 1 topics
+  const p1Topics = pick(SPEAK_PART1_TOPICS, 2, td()+'_p1topics');
+  let p1Questions = [];
+  p1Topics.forEach(t => {
+    if (SPEAK_PART1_QUESTIONS[t]) {
+      p1Questions.push({ topic: t, questions: SPEAK_PART1_QUESTIONS[t] });
+    }
+  });
+
+  // Pick 1 Part 2
+  const p2 = pick(SPEAK_PART2_CUES, 1, td()+'_p2')[0];
+
+  // Pick 3 Part 3
+  const p3 = pick(SPEAK_PART3_QUESTIONS, 3, td()+'_p3');
+
+  const data = { p1: p1Questions, p2, p3 };
+  LSS(k, data);
+  return data;
+}
+
+let engState = { articleId: null, sentIdx: 0, speed: 0.85, playing: false, showZH: false, blind: false, completed: {} };
+
+function renderEngPage() {
+  const article = getTodayEngArticle();
+  document.getElementById('eng-article-list').innerHTML = `
+    <div class="eng-article-card ${engState.articleId===article.id?'selected':''}" onclick="engSelectArticle('${article.id}')">
+      <div style="font-weight:600;">📖 ${esc(article.title)}</div>
+      <div style="font-size:12px;color:var(--t2);">${article.cat} · ${article.level} · ${article.sentences.length}句</div>
+    </div>`;
+
+  // Speaking
+  const speak = getTodaySpeaking();
+  document.getElementById('speak-content').innerHTML = `
+    <div id="speak-p1">
+      ${speak.p1.map(t => `
+        <div style="margin-bottom:14px;">
+          <div style="font-weight:600;color:var(--pink-a);margin-bottom:8px;">📌 ${esc(t.topic)}</div>
+          ${t.questions.map(q => `
+            <div class="inspo-item">
+              <div style="font-weight:600;font-size:13px;">Q: ${esc(q.q)}</div>
+              <div style="margin-top:8px;font-size:12px;line-height:1.7;background:var(--blue-l);padding:10px;border-radius:8px;display:none;" class="speak-ans">
+                <strong style="color:var(--blue-a);">🎯 9分答案：</strong><br>${esc(q.a)}
+              </div>
+              <button class="btn btn-secondary btn-sm" style="margin-top:6px;" onclick="const ans=this.previousElementSibling;ans.style.display=ans.style.display==='none'?'block':'none';this.textContent=ans.style.display==='none'?'📖 查看9分答案':'🙈 收起答案'">📖 查看9分答案</button>
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>
+    <div id="speak-p2" style="display:none;">
+      <div style="font-weight:600;color:var(--pink-a);margin-bottom:8px;">📌 Part 2: ${esc(speak.p2.topic)}</div>
+      <div class="tag-row">${speak.p2.hints.map(h=>`<span class="tag tag-blue">${esc(h)}</span>`).join('')}</div>
+      <div class="inspo-idea" style="margin-top:8px;"><strong style="color:var(--blue-a);">🎯 9分答案：</strong><br>${esc(speak.p2.a)}</div>
+    </div>
+    <div id="speak-p3" style="display:none;">
+      ${speak.p3.map(q => `
+        <div class="inspo-item">
+          <div style="font-weight:600;font-size:13px;">Q: ${esc(q.q)}</div>
+          <div class="inspo-idea" style="margin-top:6px;"><strong style="color:var(--blue-a);">🎯 9分答案：</strong><br>${esc(q.a)}</div>
+        </div>
+      `).join('')}
+    </div>`;
+
+  if (engState.articleId === article.id) {
+    engRenderReading();
+    engRenderVocab();
+    engUpdatePlayer();
+  }
+}
+
+function switchSpeakTab(tab) {
+  ['speak-p1','speak-p2','speak-p3'].forEach(id => document.getElementById(id).style.display='none');
+  document.getElementById('speak-'+tab).style.display='block';
+}
+
+function engSelectArticle(id) {
+  engState.articleId = id;
+  engState.sentIdx = 0;
+  engState.playing = false;
+  if (synth) { synth.cancel(); }
+  engState.completed = LSG('eng_completed_'+td()+'_'+id, {});
+  document.getElementById('eng-reading-card').style.display = 'block';
+  document.getElementById('eng-article-title').textContent = '📖 '+getTodayEngArticle().title+' — '+getTodayEngArticle().cat;
+  document.getElementById('player-bar').style.display = 'flex';
+  engRenderReading();
+  engRenderVocab();
+  engUpdatePlayer();
+}
+
+function engRenderReading() {
+  const article = getTodayEngArticle();
+  if (!article) return;
+  document.getElementById('eng-word-count').textContent = article.sentences.length+' 句';
+  const area = document.getElementById('eng-reading-area');
+  area.innerHTML = article.sentences.map((s, i) => {
+    const done = engState.completed[i];
+    const active = i === engState.sentIdx;
+    return `<div class="reading-row ${active?'active':''}" onclick="engJumpTo(${i})">
+      <div class="reading-en">${done?'✅ ':''}${engState.blind ? s.en.replace(/[a-zA-Z]/g,'█') : esc(s.en)}</div>
+      <div class="reading-zh ${engState.showZH?'visible':''}">${esc(s.zh)}</div>
+    </div>`;
+  }).join('');
+  // Ensure active row is visible
+  setTimeout(() => {
+    const row = document.querySelector('.reading-row.active');
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+function engRenderVocab() {
+  const article = getTodayEngArticle();
+  if (!article) return;
+  document.getElementById('eng-vocab').innerHTML = article.vocab.map(v => `
+    <span class="vocab-word" onclick="engSpeakWord('${esc(v.w)}')"><strong>${esc(v.w)}</strong> ${esc(v.m)}</span>
+  `).join('');
+}
+
+function engJumpTo(idx) {
+  if (synth) synth.cancel();
+  engState.sentIdx = idx;
+  engState.playing = false;
+  engRenderReading();
+  engUpdatePlayer();
+}
+
+function engPrevSent() {
+  if (engState.sentIdx > 0) engJumpTo(engState.sentIdx - 1);
+}
+function engNextSent() {
+  const article = getTodayEngArticle();
+  if (article && engState.sentIdx < article.sentences.length - 1) {
+    engJumpTo(engState.sentIdx + 1);
+  }
+}
+
+function toggleEngZH() {
+  engState.showZH = !engState.showZH;
+  engRenderReading();
+}
+
+function toggleBlind() {
+  engState.blind = !engState.blind;
+  engRenderReading();
+}
+
+function engSetSpeed(s) {
+  engState.speed = s;
+  document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.btn-speed').forEach(b => {
+    if (Math.abs(parseFloat(b.textContent) - s) < 0.01) b.classList.add('active');
+  });
+  if (engState.playing) { engStop(); engPlay(); }
+}
+
+function engUpdatePlayer() {
+  const article = getTodayEngArticle();
+  const total = article ? article.sentences.length : 0;
+  const cur = engState.sentIdx + 1;
+  document.getElementById('eng-sent-label').textContent = cur+'/'+total;
+  document.getElementById('eng-progress-inner').style.width = total ? (cur/total*100)+'%' : '0%';
+  document.getElementById('btn-play').textContent = engState.playing ? '⏸' : '▶';
+}
+
+function engProgressClick(e) {
+  const article = getTodayEngArticle();
+  if (!article) return;
+  const rect = e.target.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  const idx = Math.floor(pct * article.sentences.length);
+  engJumpTo(Math.min(idx, article.sentences.length - 1));
+}
+
+function toggleEngPlay() {
+  if (engState.playing) { engStop(); }
+  else { engPlay(); }
+}
+
+function engStop() {
+  engState.playing = false;
+  if (synth) synth.cancel();
+  engUpdatePlayer();
+}
+
+function engPlay() {
+  const article = getTodayEngArticle();
+  if (!article) return;
+  if (!synth) { showToast('浏览器不支持语音朗读'); return; }
+
+  engState.playing = true;
+  engUpdatePlayer();
+  engSpeakCurrent();
+}
+
+function engSpeakCurrent() {
+  if (!engState.playing) return;
+  const article = getTodayEngArticle();
+  if (!article || engState.sentIdx >= article.sentences.length) {
+    engState.playing = false;
+    engUpdatePlayer();
+    return;
+  }
+  const s = article.sentences[engState.sentIdx];
+  const u = new SpeechSynthesisUtterance(s.en);
+  u.lang = 'en-GB';
+  u.rate = engState.speed;
+  u.onend = () => {
+    // Mark completed
+    engState.completed[engState.sentIdx] = true;
+    LSS('eng_completed_'+td()+'_'+article.id, engState.completed);
+    engState.sentIdx++;
+    engRenderReading();
+    engUpdatePlayer();
+    if (engState.sentIdx >= article.sentences.length) {
+      engState.playing = false;
+      engUpdatePlayer();
+      showToast('🎉 全部朗读完成！');
+      return;
+    }
+    engSpeakCurrent();
+  };
+  u.onerror = () => {
+    engState.playing = false;
+    engUpdatePlayer();
+  };
+  synth.speak(u);
+}
+
+function engSpeakWord(word) {
+  if (!synth) return;
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(word);
+  u.lang = 'en-GB';
+  u.rate = 0.8;
+  synth.speak(u);
+}
+
+// Quiz
+let quizState = { qs:[], idx:0, correct:0 };
+
+function startEngQuiz() {
+  const article = getTodayEngArticle();
+  if (!article) return;
+  const vocab = [...article.vocab];
+  const allM = ENG_ARTICLES.flatMap(a => a.vocab).map(v => v.m);
+  quizState.qs = vocab.slice(0, 6).map(v => {
+    const distractors = allM.filter(m => m !== v.m);
+    const opts = [v.m, ...pick(distractors, 3, v.m+Math.random())];
+    return { w: v.w, correct: v.m, opts: shuffle(opts, v.m+'_opt') };
+  });
+  quizState.idx = 0; quizState.correct = 0;
+  document.getElementById('eng-quiz-modal').classList.add('show');
+  renderQuiz();
+}
+
+function renderQuiz() {
+  if (quizState.idx >= quizState.qs.length) {
+    document.getElementById('eng-quiz-body').innerHTML = `
+      <div style="text-align:center;font-size:28px;margin-bottom:8px;">🎉</div>
+      <div style="text-align:center;font-size:18px;font-weight:600;">${quizState.correct}/${quizState.qs.length} 正确</div>
+      <button class="btn btn-primary" onclick="document.getElementById('eng-quiz-modal').classList.remove('show')" style="margin-top:12px;width:100%;">关闭</button>`;
+    return;
+  }
+  const q = quizState.qs[quizState.idx];
+  document.getElementById('eng-quiz-body').innerHTML = `
+    <div style="font-weight:600;font-size:18px;margin-bottom:16px;">"${esc(q.w)}" 的中文意思是？</div>
+    ${q.opts.map(o => `<div class="quiz-option" onclick="checkQuizAns('${esc(o)}',this)">${esc(o)}</div>`).join('')}
+    <div style="font-size:12px;color:var(--t2);margin-top:8px;">第 ${quizState.idx+1}/${quizState.qs.length} 题</div>`;
+}
+
+function checkQuizAns(ans, el) {
+  const q = quizState.qs[quizState.idx];
+  if (ans === q.correct) { el.classList.add('correct'); quizState.correct++; }
+  else {
+    el.classList.add('wrong');
+    document.querySelectorAll('.quiz-option').forEach(o => { if (o.textContent === q.correct) o.classList.add('correct'); });
+  }
+  quizState.idx++;
+  setTimeout(renderQuiz, 800);
+}
+
+// ===================== 6. MPA学习 =====================
+const MPA_POOL = [
+  '国务院印发《关于进一步深化预算管理制度改革的意见》，强调加强财政资源统筹，提升预算管理信息化水平。',
+  '多省市试点"一网统管"城市治理新模式，推动城市管理从"被动处置"向"主动发现"转变。',
+  '全国公务员推行分类改革，专业技术类公务员管理办法修订，建立更为精细化的职业发展通道。',
+  '生态环境部发布新版《环境影响评价公众参与办法》，扩大公众参与范围和形式。',
+  '国务院办公厅发文推进"高效办成一件事"，优化政务服务流程，减少群众跑腿次数。',
+  '数字政府建设提速：全国一体化政务大数据体系框架基本建立，推动跨部门数据共享。',
+  '新时代"枫桥经验"推广深化：多地建立矛盾纠纷多元化解机制，基层社会治理效能提升。',
+  '财政部发布2025年财政政策展望：继续实施积极财政政策，重点支持科技创新和民生保障。',
+  '住建部部署城市更新行动：聚焦老旧小区改造、完整社区建设，推动人居环境品质提升。',
+  '国家医保局推进DRG/DIP支付方式改革三年行动计划收官，医保基金使用效率显著提升。',
+  '教育部启动新一轮"双一流"建设绩效评估，强调学科建设服务国家战略需求。',
+  '应急管理部推进基层应急能力建设：全国乡镇街道应急管理体系基本实现全覆盖。',
+  '民政部发布《关于加强低收入人口动态监测做好分层分类社会救助工作的意见》。',
+  '中央网信办开展"清朗·优化营商网络环境"专项行动，整治涉企侵权信息乱象。',
+  '国家发改委推进全国统一大市场建设：破除地方保护和市场分割，促进要素资源畅通流动。',
+];
+
+function getTodayMPA() {
+  const k = 'mpa_'+td();
+  const c = LSK(k);
+  if (c) return JSON.parse(c);
+  const selected = pick(MPA_POOL, 4, td()+'_mpa');
+  LSS(k, selected);
+  // Archive
+  let archive = LSG('mpa_archive', {});
+  archive[td()] = selected;
+  LSS('mpa_archive', archive);
+  return selected;
+}
+
+function renderMPA() {
+  const items = getTodayMPA();
+  document.getElementById('mpa-list').innerHTML = items.map((item, i) => `
+    <div class="inspo-item">
+      <div style="font-size:14px;line-height:1.7;">${i+1}. ${esc(item)}</div>
+    </div>
+  `).join('');
+  // History
+  const archive = LSG('mpa_archive', {});
+  const dates = Object.keys(archive).sort().reverse().slice(1, 8);
+  const hist = document.getElementById('mpa-history');
+  if (dates.length === 0) { hist.innerHTML = ''; return; }
+  hist.innerHTML = `<details style="margin-top:12px;"><summary class="history-toggle">📅 历史推送</summary><div style="margin-top:8px;">`+
+    dates.map(d => `<div style="font-size:13px;color:var(--t2);margin-bottom:4px;"><strong>${fmtDate(d)}</strong> — ${archive[d].length} 条</div>`).join('')+
+    `</div></details>`;
+}
+
+// ===================== 7. 消费记账 =====================
+let expViewDate = td();
+let expOffset = 0;
+
+function expShiftDay(offset) {
+  expOffset += offset;
+  const d = new Date(); d.setDate(d.getDate() + expOffset);
+  expViewDate = d.toISOString().split('T')[0];
+  renderExpense();
+}
+
+function getExpenses(date) { return LSG('exp_'+date, []); }
+function saveExpenses(date, exps) { LSS('exp_'+date, exps); }
+
+function addExpense() {
+  const item = document.getElementById('exp-item').value.trim();
+  const amt = parseFloat(document.getElementById('exp-amt').value);
+  const cat = document.getElementById('exp-cat').value;
+  if (!item || !amt) { showToast('请填写项目和金额'); return; }
+  const exps = getExpenses(expViewDate);
+  exps.push({ item, amt, cat, time: new Date().toTimeString().slice(0,5) });
+  saveExpenses(expViewDate, exps);
+  document.getElementById('exp-item').value = '';
+  document.getElementById('exp-amt').value = '';
+  renderExpense();
+  showToast('已记录：'+item+' ¥'+amt);
+}
+
+function renderExpense() {
+  const exps = getExpenses(expViewDate);
+  const total = exps.reduce((s, e) => s + e.amt, 0);
+  const isToday = expViewDate === td();
+  document.getElementById('exp-date-label').textContent = isToday ? '今天' : fmtDate(expViewDate);
+  document.getElementById('exp-day-total').textContent = '¥' + total.toFixed(2);
+
+  // Category breakdown
+  const catSum = {};
+  exps.forEach(e => { catSum[e.cat] = (catSum[e.cat]||0) + e.amt; });
+
+  const container = document.getElementById('exp-list');
+  container.innerHTML = exps.length === 0
+    ? '<div style="text-align:center;color:var(--t2);padding:10px;">暂无记录</div>'
+    : exps.map((e, i) => `
+      <div class="exp-row">
+        <div>
+          <div>${esc(e.item)}</div>
+          <div class="exp-cat">${e.cat} · ${e.time}</div>
+        </div>
+        <div class="exp-amt" style="color:var(--pink-a);">-¥${e.amt.toFixed(2)}</div>
+        <span style="cursor:pointer;color:var(--t3);font-size:12px;" onclick="delExpense('${expViewDate}',${i})">✕</span>
+      </div>
+    `).join('');
+
+  // Monthly summary
+  const now = new Date();
+  const month = now.toISOString().slice(0,7);
+  let monthTotal = 0;
+  const monthCats = {};
+  for (let d=1; d<=31; d++) {
+    const date = `${month}-${String(d).padStart(2,'0')}`;
+    const dayExps = LSG('exp_'+date, []);
+    dayExps.forEach(e => {
+      monthTotal += e.amt;
+      monthCats[e.cat] = (monthCats[e.cat]||0) + e.amt;
+    });
+  }
+  document.getElementById('exp-monthly').innerHTML = `
+    <div style="font-size:18px;font-weight:700;color:var(--pink-a);">¥${monthTotal.toFixed(2)}</div>
+    <div style="margin-top:4px;">本月累计 · 共${Object.values(monthCats).reduce((s,v)=>s+v,0)}笔</div>
+    ${Object.entries(monthCats).map(([k,v]) => `<div style="margin-top:2px;">${k}: ¥${v.toFixed(2)}</div>`).join('')}
+  `;
+}
+
+function delExpense(date, idx) {
+  const exps = getExpenses(date);
+  exps.splice(idx, 1);
+  saveExpenses(date, exps);
+  renderExpense();
+}
+
+// ===================== 8. 行业新闻 =====================
+const NEWS_POOL = [
+  { cat:'理财', text:'市场震荡期配置思路：哑铃策略受关注——高股息防御资产+科技成长两端布局，平衡风险收益。' },
+  { cat:'理财', text:'个人养老金制度全面推广：第三支柱加速扩容，可投产品范围扩大至指数基金和养老目标FOF。' },
+  { cat:'理财', text:'黄金价格高位运行：全球央行持续增持黄金储备，个人投资者建议控制仓位不超总资产10%。' },
+  { cat:'理财', text:'存款利率持续下行：大行3年期定存利率降至1.5%左右，国债和纯债基金成为稳健替代选择。' },
+  { cat:'理财', text:'基金定投策略升级：智能定投（均线偏离法）相比普通定投在震荡市中降低平均持仓成本。' },
+  { cat:'理财', text:'保险新规落地：预定利率进一步下调至2.0%，传统型增额终身寿险性价比走低，建议关注分红险。' },
+  { cat:'生物医药', text:'mRNA技术平台拓展至肿瘤治疗领域：多家药企推进个性化癌症疫苗临床试验，初步数据积极。' },
+  { cat:'生物医药', text:'GLP-1类药物适应症持续扩大：从糖尿病/减重延伸至心血管保护、阿尔茨海默病等方向。' },
+  { cat:'生物医药', text:'CAR-T细胞疗法商业化提速：国产首款实体瘤CAR-T获批临床，靶向CLDN18.2的胃癌适应症受关注。' },
+  { cat:'生物医药', text:'AI制药进入验证期：多家AI辅助发现的分子进入临床II期，行业从概念验证走向实际产出。' },
+  { cat:'AI', text:'多模态大模型竞争白热化：头部公司密集发布新版本，推理能力和视觉理解成为差异化竞争焦点。' },
+  { cat:'AI', text:'AI Agent从概念走向落地：企业级智能体在客服、编程、数据分析等场景加速部署，效率提升显著。' },
+  { cat:'AI', text:'AI编程工具渗透率激增：超60%专业开发者已使用AI辅助编码，代码生成质量和安全性持续改善。' },
+  { cat:'AI', text:'具身智能机器人成为新风口：大模型+机械本体融合，工业和服务场景的实用化方案逐步清晰。' },
+  { cat:'AI', text:'开源模型生态繁荣：Llama、通义千问等开源模型性能逼近闭源头部产品，降低企业AI应用门槛。' },
+  { cat:'AI', text:'AI安全治理框架加速制定：主要经济体推进AI立法，模型可解释性和对齐研究成为行业标配。' },
+  { cat:'生物医药', text:'ADC药物（抗体偶联药物）研发持续火热：中国已成为全球ADC管线最丰富的国家之一。' },
+  { cat:'生物医药', text:'基因编辑疗法进入商业化元年：全球首款CRISPR疗法上市后，适应症从罕见病向常见病拓展。' },
+];
+
+function getTodayNews() {
+  const k = 'news_'+td();
+  const c = LSK(k);
+  if (c) return JSON.parse(c);
+  const fin = pick(NEWS_POOL.filter(n=>n.cat==='理财'), 2, td()+'_nfin');
+  const bio = pick(NEWS_POOL.filter(n=>n.cat==='生物医药'), 2, td()+'_nbio');
+  const ai = pick(NEWS_POOL.filter(n=>n.cat==='AI'), 2, td()+'_nai');
+  const selected = [...fin, ...bio, ...ai];
+  LSS(k, selected);
+  let archive = LSG('news_archive', {});
+  archive[td()] = selected;
+  LSS('news_archive', archive);
+  return selected;
+}
+
+function renderNews() {
+  const items = getTodayNews();
+  document.getElementById('news-list').innerHTML = items.map((item, i) => `
+    <div class="inspo-item">
+      <div class="tag-row"><span class="tag tag-pink">${esc(item.cat)}</span></div>
+      <div style="font-size:14px;line-height:1.6;margin-top:6px;">${esc(item.text)}</div>
+    </div>
+  `).join('');
+
+  const archive = LSG('news_archive', {});
+  const dates = Object.keys(archive).sort().reverse().slice(1, 8);
+  const hist = document.getElementById('news-history');
+  if (dates.length === 0) { hist.innerHTML = ''; return; }
+  hist.innerHTML = `<details style="margin-top:12px;"><summary class="history-toggle">📅 历史推送</summary><div style="margin-top:8px;">`+
+    dates.map(d => `<div style="font-size:13px;color:var(--t2);margin-bottom:4px;"><strong>${fmtDate(d)}</strong> — ${archive[d].length} 条</div>`).join('')+
+    `</div></details>`;
+}
+
+// ===================== 9. 工作总结 =====================
+function saveWorkSummary() {
+  const done = document.getElementById('wrk-done').value.trim();
+  const gain = document.getElementById('wrk-gain').value.trim();
+  const plan = document.getElementById('wrk-plan').value.trim();
+  if (!done) { showToast('请至少填写工作完成情况'); return; }
+
+  // Auto-optimize
+  const optimized = optimizeWorkSummary(done, gain, plan);
+  const summary = { done, gain, plan, optimized, createdAt: td() };
+  let records = LSG('work_summaries', []);
+  records.unshift(summary);
+  LSS('work_summaries', records);
+
+  document.getElementById('wrk-optimized').innerHTML = `
+    <div class="card" style="background:var(--blue-l);">
+      <div class="card-title">✨ 优化后表述</div>
+      <div style="font-size:14px;line-height:1.8;white-space:pre-wrap;">${esc(optimized)}</div>
+    </div>`;
+  showToast('已保存并优化');
+  renderWork();
+}
+
+function optimizeWorkSummary(done, gain, plan) {
+  let result = '【今日工作完成情况】\n';
+  const items = done.split(/[；;，,\n]+/).filter(Boolean);
+  items.forEach((item, i) => {
+    result += `${i+1}. 完成了${item.trim()}\n`;
+  });
+  if (gain) {
+    result += '\n【今日收获与反思】\n';
+    const gains = gain.split(/[；;，,\n]+/).filter(Boolean);
+    gains.forEach((g, i) => {
+      result += `${i+1}. ${g.trim()}\n`;
+    });
+  }
+  if (plan) {
+    result += '\n【明日工作计划】\n';
+    const plans = plan.split(/[；;，,\n]+/).filter(Boolean);
+    plans.forEach((p, i) => {
+      result += `${i+1}. ${p.trim()}\n`;
+    });
+  }
+  result += '\n——以上内容为今日工作总结，请审阅。';
+  return result;
+}
+
+function renderWork() {
+  const records = LSG('work_summaries', []);
+  document.getElementById('wrk-history').innerHTML = records.length === 0 ? '' : `
+    <details style="margin-top:12px;"><summary class="history-toggle">📅 历史总结 (${records.length} 条)</summary>
+      ${records.map((r, i) => `
+        <div class="card" style="margin-top:8px;">
+          <div style="display:flex;justify-content:space-between;">
+            <strong>${fmtDate(r.createdAt)}</strong>
+            <span style="font-size:12px;color:var(--d);cursor:pointer;" onclick="delWorkSummary(${i})">删除</span>
+          </div>
+          <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;margin-top:6px;">${esc(r.optimized || r.done)}</div>
+        </div>
+      `).join('')}
+    </details>`;
+
+  // Load today's if exists
+  const today = records.find(r => r.createdAt === td());
+  if (today) {
+    document.getElementById('wrk-done').value = today.done;
+    document.getElementById('wrk-gain').value = today.gain || '';
+    document.getElementById('wrk-plan').value = today.plan || '';
+    if (today.optimized) {
+      document.getElementById('wrk-optimized').innerHTML = `
+        <div class="card" style="background:var(--blue-l);">
+          <div class="card-title">✨ 优化后表述</div>
+          <div style="font-size:14px;line-height:1.8;white-space:pre-wrap;">${esc(today.optimized)}</div>
+        </div>`;
+    }
+  }
+}
+
+function delWorkSummary(idx) {
+  let records = LSG('work_summaries', []);
+  records.splice(idx, 1);
+  LSS('work_summaries', records);
+  renderWork();
+}
+
+// ===================== 10. 身材管理 =====================
+const DEFAULT_MEASUREMENTS = [
+  { key:'waist', label:'腰围', val:68, unit:'cm', icon:'👗' },
+  { key:'hip', label:'臀围', val:90, unit:'cm', icon:'🍑' },
+  { key:'thigh', label:'大腿围', val:52, unit:'cm', icon:'🦵' },
+  { key:'calf', label:'小腿围', val:34, unit:'cm', icon:'🦶' },
+  { key:'arm', label:'大臂围', val:26, unit:'cm', icon:'💪' },
+  { key:'shoulder', label:'肩宽', val:38, unit:'cm', icon:'👔' },
+  { key:'leg_len', label:'腿长', val:95, unit:'cm', icon:'📏' },
+];
+
+function getMeasurements() {
+  return LSG('body_measurements', { current: [...DEFAULT_MEASUREMENTS], history: {} });
+}
+
+function renderBody() {
+  const data = getMeasurements();
+  const cur = data.current;
+  const histKeys = Object.keys(data.history).sort();
+
+  document.getElementById('body-measurements').innerHTML = cur.map((m, i) => {
+    // Find previous value
+    let prev = null;
+    if (histKeys.length > 0) {
+      const prevData = data.history[histKeys[histKeys.length-1]];
+      if (prevData) {
+        const prevM = prevData.find(p => p.key === m.key);
+        if (prevM) prev = prevM.val;
+      }
+    }
+    const diff = prev !== null ? (m.val - prev).toFixed(1) : null;
+    const diffStr = diff ? (diff > 0 ? `<span style="color:var(--d);">↑${diff}</span>` : `<span style="color:var(--s);">↓${Math.abs(diff)}</span>`) : '';
+    return `<div class="body-item">
+      <div class="val" onclick="editMeasurement('${m.key}',${m.val})">${m.val}</div>
+      <div class="lbl">${m.icon} ${m.label} (${m.unit})</div>
+      ${diffStr ? `<div class="change">${diffStr} 较上次</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Outfit advice
+  const waist = cur.find(m=>m.key==='waist')?.val || 68;
+  const hip = cur.find(m=>m.key==='hip')?.val || 90;
+  const whr = waist / hip;
+  const legLen = cur.find(m=>m.key==='leg_len')?.val || 95;
+  let outfit = '';
+  if (legLen > 90) outfit += '✨ 腿长优势明显，高腰阔腿裤、直筒牛仔裤能最好地展现比例。';
+  else outfit += '✨ 建议选择高腰设计的下装，视觉延长腿部线条。';
+  if (whr < 0.8) outfit += '\n🌟 腰臀比优越，收腰连衣裙和A字裙能很好展现曲线。';
+  else outfit += '\n🌟 推荐V领上衣和垂感面料，打造柔和的纵向线条。';
+  outfit += '\n💡 今日推荐：浅色系宽松衬衫 + 高腰烟管裤 + 小白鞋，简约通勤又不失精致。';
+
+  document.getElementById('outfit-advice').innerHTML = `<div style="font-size:14px;line-height:1.8;white-space:pre-wrap;">${outfit}</div>`;
+
+  // Body log & advice
+  const todayLog = LSG('body_log_'+td(), null);
+  if (todayLog) {
+    document.getElementById('body-weight').value = todayLog.weight || '';
+    document.getElementById('body-exercise').value = todayLog.exercise || '';
+    document.getElementById('body-duration').value = todayLog.duration || '';
+    document.getElementById('body-calories').value = todayLog.calories || '';
+    renderBodyAdvice(todayLog);
+  }
+
+  // History
+  const allDates = Object.keys(localStorage).filter(k => k.startsWith('ll_body_log_')).map(k => k.replace('ll_body_log_','')).sort().reverse().slice(0, 7);
+  const histEl = document.getElementById('body-history');
+  if (allDates.length === 0) { histEl.innerHTML = ''; return; }
+  histEl.innerHTML = `<details style="margin-top:12px;"><summary class="history-toggle">📅 最近运动记录</summary><div style="margin-top:8px;">`+
+    allDates.map(d => {
+      const log = LSG('body_log_'+d, null);
+      if (!log) return '';
+      return `<div style="font-size:12px;color:var(--t2);margin-bottom:4px;"><strong>${fmtDate(d)}</strong> ${log.weight?log.weight+'kg':''} ${log.exercise||''} ${log.duration?log.duration+'min':''} ${log.calories?log.calories+'kcal':''}</div>`;
+    }).join('')+
+    `</div></details>`;
+}
+
+function editMeasurement(key, currentVal) {
+  const val = prompt('修改' + key + '（当前：' + currentVal + 'cm）：', currentVal);
+  if (val === null) return;
+  const num = parseFloat(val);
+  if (isNaN(num)) return;
+
+  const data = getMeasurements();
+  // Save current as history before changing
+  const ts = td();
+  data.history[ts] = JSON.parse(JSON.stringify(data.current));
+  // Update
+  const idx = data.current.findIndex(m => m.key === key);
+  if (idx >= 0) data.current[idx].val = num;
+  LSS('body_measurements', data);
+  renderBody();
+  showToast('已更新：' + key + ' ' + currentVal + ' → ' + num + 'cm');
+}
+
+function saveBodyLog() {
+  const weight = parseFloat(document.getElementById('body-weight').value) || null;
+  const exercise = document.getElementById('body-exercise').value.trim();
+  const duration = parseInt(document.getElementById('body-duration').value) || null;
+  const calories = parseInt(document.getElementById('body-calories').value) || null;
+  if (!exercise) { showToast('请至少填写运动项目'); return; }
+
+  const log = { weight, exercise, duration, calories };
+  LSS('body_log_'+td(), log);
+  renderBodyAdvice(log);
+  renderBody();
+  showToast('已保存运动记录');
+}
+
+function renderBodyAdvice(log) {
+  let advice = '';
+  if (log.exercise) {
+    if (log.exercise.includes('跑') || log.exercise.includes('步')) {
+      advice += '🏃 跑步是很好的有氧运动，建议配合核心训练（平板支撑、卷腹）来保护膝盖并提升跑步效率。\n';
+    }
+    if (log.exercise.includes('瑜伽') || log.exercise.includes('拉伸')) {
+      advice += '🧘 瑜伽/拉伸有助于改善体态，建议每次练习后关注肩颈和髋部的放松。\n';
+    }
+    if (log.exercise.includes('力量') || log.exercise.includes('举') || log.exercise.includes('哑铃')) {
+      advice += '💪 力量训练后记得补充蛋白质（鸡蛋/牛奶/鸡胸肉），48小时内不要重复训练同一肌群。\n';
+    }
+    if (!advice) {
+      advice += '✅ 已记录今日运动，保持规律运动是维持身材的最佳方式。\n';
+    }
+    if (log.duration && log.duration < 20) {
+      advice += '⏰ 运动时长偏短，建议至少保持20-30分钟，才能有效进入燃脂状态。\n';
+    }
+    if (log.calories && log.calories > 400) {
+      advice += '🔥 今日消耗可观！记得补充足够的水分和电解质。\n';
+    }
+  }
+  document.getElementById('body-advice').innerHTML = advice
+    ? `<div class="inspo-idea" style="white-space:pre-wrap;">${advice}</div>`
+    : '';
+}
+
+// ===================== AUTO REFRESH =====================
+function checkDailyRefresh() {
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+
+  // 7:00 — MPA
+  if (h === 7 && m === 0) {
+    const last = LSK('mpa_refresh');
+    if (last !== td()) {
+      localStorage.removeItem('ll_mpa_'+td());
+      LSS('mpa_refresh', td());
+    }
+  }
+
+  // 9:00 — Inspiration, English, Industry News, Speaking
+  if (h === 9 && m === 0) {
+    const lastInspo = LSK('inspo_refresh');
+    const lastEng = LSK('eng_refresh');
+    const lastNews = LSK('news_refresh');
+    const lastSpeak = LSK('speak_refresh');
+    if (lastInspo !== td()) {
+      localStorage.removeItem('ll_inspo_'+td());
+      LSS('inspo_refresh', td());
+    }
+    if (lastEng !== td()) {
+      localStorage.removeItem('ll_eng_article_'+td());
+      LSS('eng_refresh', td());
+    }
+    if (lastNews !== td()) {
+      localStorage.removeItem('ll_news_'+td());
+      LSS('news_refresh', td());
+    }
+    if (lastSpeak !== td()) {
+      localStorage.removeItem('ll_eng_speaking_'+td());
+      LSS('speak_refresh', td());
+    }
+  }
+}
+
+// ===================== INIT =====================
+function init() {
+  updateDates();
+  renderPlan();
+
+  // Check for daily refresh every 30s
+  checkDailyRefresh();
+  setInterval(checkDailyRefresh, 30000);
+
+  // Ensure player bar hidden on non-english pages
+  document.getElementById('player-bar').style.display = 'none';
+}
+
+init();
+</script>
+</body>
+</html>
