@@ -219,6 +219,11 @@ function initDB(){
     DB.set('body_measures',{height:165,weight:46,leg_length:100,thigh:50,calf:31,waist:57,chest:75,hip:85,wrist:14,forearm:19,ankle:21,arm:20.5,shoulder:36,arm_length:66.5});
     DB.set('body_measure_history',[]);
     DB.set('body_exercises',{});
+    DB.set('countdowns',[
+      {id:1,title:'雅思考试',date:'2026-08-15',type:'countdown',pinned:true},
+      {id:2,title:'MPA论文答辩',date:'2026-12-20',type:'countdown',pinned:true},
+      {id:3,title:'入职3周年',date:'2023-09-01',type:'countup',pinned:false},
+    ]);
     DB.set('init',true);
   }
   // Ensure today's todos exist
@@ -275,6 +280,7 @@ function getNow(){const d=new Date();return d.toISOString().split('T')[0]+' '+d.
 // ==================== NAVIGATION ====================
 const MODULES = [
   {id:'daily',name:'每日计划',icon:'📋'},
+  {id:'countdown',name:'倒数日',icon:'⏳'},
   {id:'inspiration',name:'选题灵感',icon:'💡'},
   {id:'remix',name:'爆款二创',icon:'🔥'},
   {id:'review',name:'内容复盘',icon:'📊'},
@@ -353,6 +359,24 @@ function renderDaily(dateOverride){
     <button onclick="renderDaily(navDate('${today}',1))">▶</button>
     <button onclick="renderDaily()" style="font-size:12px;">今天</button>
   </div>`;
+
+  // Pinned countdowns on top
+  const countdowns = DB.get('countdowns')||[];
+  const pinned = countdowns.filter(c=>c.pinned);
+  if(pinned.length>0 && today===getToday()){
+    html += `<div class="card" style="background:linear-gradient(135deg,#fce4ec 0%,#e3f2fd 100%);">
+      <div class="card-title">⏳ 倒数日</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">`;
+    pinned.forEach(c=>{
+      const d = calcCountdown(c.date, c.type);
+      html += `<div style="flex:1;min-width:80px;text-align:center;padding:8px;background:rgba(255,255,255,0.6);border-radius:10px;">
+        <div style="font-size:22px;font-weight:700;color:var(--pink-300);">${d.days}</div>
+        <div style="font-size:10px;color:var(--text-light);">${d.label}</div>
+        <div style="font-size:12px;font-weight:600;margin-top:2px;">${escHtml(c.title)}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
 
   // Stats
   html += `<div class="stat-row">
@@ -1489,7 +1513,110 @@ function renderModule(id){
     case 'news': renderNews(); break;
     case 'worklog': renderWorklog(); break;
     case 'body': renderBody(); break;
+    case 'countdown': renderCountdown(); break;
   }
+}
+
+// ==================== COUNTDOWN MODULE ====================
+function calcCountdown(targetDate, type){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const target = new Date(targetDate); target.setHours(0,0,0,0);
+  const diffMs = target - now;
+  const days = Math.ceil(Math.abs(diffMs) / (1000*60*60*24));
+  if(type==='countdown'){
+    if(diffMs>0) return {days,label:`还有 ${days} 天`};
+    else return {days,label:`已过 ${days} 天`};
+  }else{
+    return {days,label:`已经 ${days} 天`};
+  }
+}
+
+function renderCountdown(){
+  const countdowns = DB.get('countdowns')||[];
+  let html = `<button class="btn btn-pink" onclick="openCountdownForm()" style="margin-bottom:12px;width:100%;">+ 添加倒数日</button>`;
+
+  if(countdowns.length===0){
+    html += `<div class="empty-state"><div class="icon">⏳</div><div>还没有倒数日<br>点击上方按钮添加</div></div>`;
+  }else{
+    countdowns.forEach((c,i)=>{
+      const d = calcCountdown(c.date, c.type);
+      const isCountdown = c.type==='countdown';
+      const bgColor = isCountdown ? 'linear-gradient(135deg,#fce4ec,#fff)' : 'linear-gradient(135deg,#e3f2fd,#fff)';
+      html += `<div class="card fade-in" style="background:${bgColor};">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="text-align:center;min-width:60px;">
+            <div style="font-size:28px;font-weight:700;color:${isCountdown?'var(--pink-300)':'#5c8dc9'};">${d.days}</div>
+            <div style="font-size:10px;color:var(--text-light);">${d.label}</div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;">${escHtml(c.title)}</div>
+            <div style="font-size:11px;color:var(--text-light);">${isCountdown?'⏳ 倒计时':'📅 正计时'} · ${c.date}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px;" onclick="toggleCountdownPin(${i})">${c.pinned?'📌 已置顶':'📍 置顶'}</button>
+            <button class="btn btn-danger btn-sm" style="font-size:10px;padding:3px 8px;" onclick="deleteCountdown(${i})">删除</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  document.getElementById('content').innerHTML = html;
+}
+
+function openCountdownForm(editIdx){
+  const countdowns = DB.get('countdowns')||[];
+  const isEdit = editIdx!==undefined;
+  const c = isEdit ? countdowns[editIdx] : {title:'',date:getToday(),type:'countdown',pinned:false};
+  openSheet(`
+    <h4 style="margin-bottom:12px;">${isEdit?'✏️ 编辑':'➕ 新增'}倒数日</h4>
+    <input type="text" id="cdTitle" placeholder="名称（如：雅思考试）" value="${escHtml(c.title)}" style="margin-bottom:8px;">
+    <input type="date" id="cdDate" value="${c.date}" style="margin-bottom:8px;">
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;">
+        <input type="radio" name="cdType" value="countdown" ${c.type==='countdown'?'checked':''}> ⏳ 倒计时
+      </label>
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;">
+        <input type="radio" name="cdType" value="countup" ${c.type==='countup'?'checked':''}> 📅 正计时
+      </label>
+    </div>
+    <button class="btn btn-pink" onclick="saveCountdown(${isEdit?editIdx:'null'})" style="width:100%;">保存</button>
+  `,()=>{renderCountdown();});
+}
+
+function saveCountdown(editIdx){
+  const title = document.getElementById('cdTitle')?.value.trim();
+  const date = document.getElementById('cdDate')?.value;
+  const type = document.querySelector('input[name="cdType"]:checked')?.value||'countdown';
+  if(!title||!date) return;
+  const countdowns = DB.get('countdowns')||[];
+  const item = {title,date,type,pinned:false};
+  if(editIdx!==null && editIdx!==undefined){
+    item.pinned = countdowns[editIdx]?.pinned||false;
+    countdowns[editIdx] = item;
+  }else{
+    item.id = Date.now();
+    countdowns.push(item);
+  }
+  DB.set('countdowns',countdowns);
+  closeSheet();
+}
+
+function toggleCountdownPin(idx){
+  const countdowns = DB.get('countdowns')||[];
+  if(countdowns[idx]){
+    countdowns[idx].pinned = !countdowns[idx].pinned;
+    DB.set('countdowns',countdowns);
+    renderCountdown();
+  }
+}
+
+function deleteCountdown(idx){
+  const countdowns = DB.get('countdowns')||[];
+  countdowns.splice(idx,1);
+  DB.set('countdowns',countdowns);
+  renderCountdown();
+}
 }
 
 // ==================== INIT ====================
