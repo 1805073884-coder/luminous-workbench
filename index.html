@@ -743,58 +743,48 @@ function renderEnglish(){
   // Generate daily content if not exists
   if(!todayData){
     const articles = [
-      {title:'The Future of Work: How AI is Reshaping Careers',cn:'工作的未来：AI如何重塑职业',
+      {title:'Is technology changing our brains?',cn:'科技正在改变我们的大脑吗？',
        sentences:[
-        {en:'Good morning everyone, and welcome to this lecture on the future of work in the age of artificial intelligence.',cn:'大家早上好，欢迎参加这场关于人工智能时代工作未来的讲座。'},
-        {en:'Today I will discuss how AI is fundamentally reshaping the employment landscape across the globe.',cn:'今天我将讨论人工智能如何从根本上重塑全球就业格局。'},
-        {en:'The rapid advancement of machine learning and automation is transforming industries at an unprecedented pace.',cn:'机器学习和自动化的快速进步正在以前所未有的速度变革各行各业。'},
-        {en:'From automated customer service chatbots to AI-powered medical diagnosis, machines are taking over routine and even complex tasks.',cn:'从自动化客服聊天机器人到AI驱动的医疗诊断，机器正在接管常规甚至复杂任务。'},
-        {en:'According to a recent study by the World Economic Forum, AI could displace approximately 85 million jobs by 2025.',cn:'根据世界经济论坛最近的研究，到2025年AI可能取代约8500万个工作岗位。'},
-        {en:'However, the same report suggests that 97 million new roles may emerge in their place across various sectors.',cn:'然而，同一份报告指出各行业可能会涌现出9700万个新岗位。'},
-        {en:'These new positions will require advanced skills in data science, machine learning, and digital literacy.',cn:'这些新职位将需要数据科学、机器学习和数字素养方面的高级技能。'},
-        {en:'Fields requiring creativity, emotional intelligence, and complex problem-solving are proving particularly resilient to automation.',cn:'需要创造力、情商和复杂问题解决能力的领域被证明对自动化特别有韧性。'},
-        {en:'Healthcare professionals, educators, and creative workers are among those least likely to be replaced by machines.',cn:'医疗专业人员、教育工作者和创意工作者属于最不可能被机器取代的人群。'},
-        {en:'Companies worldwide are now investing billions of dollars in retraining and upskilling their existing workforce.',cn:'全球企业正在投资数十亿美元对现有员工进行再培训和技能提升。'},
-        {en:'Governments are also launching national initiatives to prepare citizens for the digital economy of tomorrow.',cn:'各国政府也在推出国家计划，帮助公民为未来的数字经济做好准备。'},
-        {en:'The key to thriving in this new era lies in embracing technological change while developing uniquely human capabilities.',cn:'在这个新时代蓬勃发展的关键，在于拥抱技术变革的同时培养人类独有的能力。'},
-        {en:'Those who combine technical knowledge with strong interpersonal skills will have the greatest advantage.',cn:'那些将技术知识与强大的人际交往能力相结合的人将拥有最大的优势。'},
-        {en:'Thank you for your attention, and I will now be happy to take any questions you may have on this topic.',cn:'感谢大家的关注，现在我很乐意回答你们关于这个主题的任何问题。'},
-        {en:'To summarize, the future belongs to those who can adapt, learn continuously, and work alongside intelligent machines.',cn:'总结来说，未来属于那些能够适应变化、持续学习并与智能机器协作的人。'},
-        {en:'Remember that technology is a tool, and it is up to us to use it wisely for the benefit of all humanity.',cn:'请记住，技术是一种工具，如何明智地使用它造福全人类，取决于我们自己。'}
+        {en:'Hello and welcome to Six Minute English from BBC Learning English. I\'m Neil and joining me today is Rob.',cn:'大家好，欢迎收听BBC英语学习的六分钟英语节目。我是尼尔，今天和我一起的是罗布。'},
+        {en:'In today\'s programme we\'re talking about whether all the time we spend on smartphones and computers is actually changing the way our brains work.',cn:'在今天的节目中，我们将讨论我们花在智能手机和电脑上的时间是否真的在改变我们大脑的工作方式。'},
+        {en:'Now, according to recent research, the average person checks their phone more than a hundred times every single day.',cn:'根据最近的研究，普通人每天查看手机的次数超过一百次。'},
+        {en:'That is a staggering figure, and scientists are becoming increasingly concerned about what this constant digital stimulation is doing to our minds.',cn:'这是一个惊人的数字，科学家们越来越担心这种持续的数字刺激对我们的大脑造成了什么影响。'},
+        {en:'Some researchers argue that heavy technology use is actually rewiring the neural pathways in our brains, making it harder for us to focus for long periods.',cn:'一些研究人员认为，过度使用科技实际上正在重塑我们大脑中的神经通路，使我们更难长时间集中注意力。'},
+        {en:'They call this phenomenon "continuous partial attention", where we are never fully focused on any single task because we are constantly scanning for new information.',cn:'他们将这种现象称为"持续性部分注意力"，即我们从未完全专注于任何一项任务，因为我们在不断扫描新的信息。'},
+        {en:'However, not all experts agree with this rather negative assessment of our digital habits.',cn:'然而，并非所有专家都认同这种对我们数字习惯的负面评价。'},
+        {en:'Some point out that every new technology throughout history has been met with similar concerns, from the printing press to the television.',cn:'一些人指出，历史上的每一项新技术——从印刷机到电视——都曾遭遇过类似的担忧。'},
+        {en:'They argue that the human brain is remarkably adaptable, and that young people growing up with technology may actually develop superior multitasking abilities.',cn:'他们认为人类大脑具有非凡的适应能力，伴随科技成长的年轻人实际上可能发展出更强的多任务处理能力。'},
+        {en:'The key, according to most psychologists, is finding a healthy balance between screen time and activities that require deep focus, like reading a book or having a face-to-face conversation.',cn:'根据大多数心理学家的观点，关键是在屏幕时间和需要深度专注的活动之间找到健康的平衡，比如读书或面对面交谈。'},
+        {en:'Some practical tips include setting aside phone-free time each day, turning off notifications, and avoiding screens for at least an hour before bedtime.',cn:'一些实用的建议包括每天留出不看手机的时间、关闭通知提醒，以及睡前至少一小时避免使用屏幕。'},
+        {en:'So while technology may be changing our brains, the good news is that we still have the power to decide how and when we use these powerful tools.',cn:'所以，虽然科技可能正在改变我们的大脑，但好消息是我们仍然有能力决定如何以及何时使用这些强大的工具。'}
        ]},
-      {title:'Climate Change and Urban Planning',cn:'气候变化与城市规划',
+      {title:'The future of food: will we all become vegetarian?',cn:'食物的未来：我们都会变成素食者吗？',
        sentences:[
-        {en:'Welcome to this presentation on climate change and its profound impact on urban development worldwide.',cn:'欢迎参加这场关于气候变化及其对全球城市发展深远影响的演讲。'},
-        {en:'Cities around the world are currently facing unprecedented environmental challenges due to global warming.',cn:'由于全球变暖，世界各地的城市正面临着前所未有的环境挑战。'},
-        {en:'Rising sea levels threaten coastal communities, with scientific projections showing a potential one-meter rise by the year 2100.',cn:'海平面上升威胁着沿海社区，科学预测显示到2100年可能上升一米。'},
-        {en:'Extreme weather events, including devastating floods, powerful hurricanes, and prolonged heat waves, have increased dramatically in both frequency and intensity.',cn:'极端天气事件，包括毁灭性洪水、强飓风和持续热浪，在频率和强度上都急剧增加。'},
-        {en:'These environmental changes are forcing urban planners and policymakers to fundamentally rethink how cities should be designed.',cn:'这些环境变化正迫使城市规划者和政策制定者从根本上重新思考城市的设计方式。'},
-        {en:'Green building standards and sustainable construction practices have become essential components of modern urban regulations.',cn:'绿色建筑标准和可持续建筑实践已成为现代城市法规的重要组成部分。'},
-        {en:'Research shows that improved public transportation systems can reduce urban carbon emissions by up to 40 percent.',cn:'研究表明，改善的公共交通系统可以将城市碳排放减少高达40%。'},
-        {en:'Urban forests and green spaces not only absorb carbon dioxide but also significantly improve the quality of life for residents.',cn:'城市森林和绿地不仅能吸收二氧化碳，还能显著改善居民的生活质量。'},
-        {en:'Cities that successfully balance economic development with environmental sustainability will lead the global transition.',cn:'成功平衡经济发展与环境可持续性的城市将引领全球转型。'},
-        {en:'Community engagement and public participation are crucial elements in developing effective climate adaptation strategies.',cn:'社区参与和公众参与是制定有效气候适应策略的关键要素。'},
-        {en:'The challenge ahead is substantial, but with careful planning and collective action, our cities can become more livable and resilient.',cn:'前方的挑战是巨大的，但通过精心规划和集体行动，我们的城市可以变得更加宜居和更具韧性。'},
-        {en:'Thank you for your time, and I look forward to discussing these ideas further with you all.',cn:'感谢大家的时间，我期待与大家进一步讨论这些想法。'},
-        {en:'In conclusion, the fight against climate change begins in our cities, and every one of us has a role to play.',cn:'总之，抗击气候变化的战斗从我们的城市开始，我们每个人都有一份责任。'},
-        {en:'Let us work together to build urban environments that are sustainable, inclusive, and beautiful for generations to come.',cn:'让我们共同努力，为子孙后代建设可持续、包容且美丽的城市环境。'}
+        {en:'Welcome to this edition of BBC World Service, where today we explore whether a global shift towards plant-based diets is inevitable.',cn:'欢迎收听本期BBC世界服务节目，今天我们将探讨全球向植物性饮食转变是否不可避免。'},
+        {en:'With the world population expected to reach nearly ten billion by 2050, experts warn that our current food production systems are simply unsustainable.',cn:'随着世界人口预计到2050年将达到近一百亿，专家警告我们目前的食品生产系统根本无法持续下去。'},
+        {en:'Raising livestock for meat and dairy products currently accounts for nearly fifteen percent of all global greenhouse gas emissions.',cn:'为获取肉类和乳制品而饲养牲畜目前占全球温室气体排放总量的近百分之十五。'},
+        {en:'That is more than the emissions from all the cars, planes, trains and ships in the world combined, which is a truly shocking statistic.',cn:'这比全世界所有汽车、飞机、火车和轮船的排放总和还要多，这是一个真正令人震惊的数据。'},
+        {en:'In response to these environmental concerns, many people are now choosing to reduce their meat consumption or eliminate it entirely.',cn:'为了应对这些环境问题，许多人现在选择减少肉类消费或完全不吃肉。'},
+        {en:'The number of people identifying as vegetarian or vegan has more than doubled in the United Kingdom over the past decade alone.',cn:'仅在过去十年中，英国自称为素食者或纯素食者的人数就增加了一倍多。'},
+        {en:'Supermarkets and restaurants have responded by dramatically expanding their plant-based offerings, from oat milk lattes to meat-free burgers that actually taste like the real thing.',cn:'超市和餐厅也做出了回应，大幅扩展了植物性产品供应，从燕麦奶拿铁到口感与真肉相似的素食汉堡。'},
+        {en:'Scientists are also working on lab-grown meat, which is produced by cultivating animal cells in a laboratory rather than raising and slaughtering animals.',cn:'科学家们还在研究实验室培育肉，即通过在实验室培养动物细胞来生产肉类，而不是饲养和屠宰动物。'},
+        {en:'However, critics point out that a completely plant-based diet may not be suitable for everyone, particularly in regions where access to diverse food sources is limited.',cn:'然而，批评者指出完全植物性饮食可能并不适合所有人，特别是在获取多样化食物来源有限的地区。'},
+        {en:'The most likely scenario for the future appears to be a significant reduction in meat consumption rather than its complete elimination from our diets.',cn:'未来最可能的情景似乎是肉类消费大幅减少，而不是从我们的饮食中完全消除。'},
+        {en:'What is clear is that the way we produce and consume food will need to change dramatically if we are to feed a growing global population without destroying the planet.',cn:'显而易见的是，如果我们想在不破坏地球的前提下养活不断增长的全球人口，我们生产和消费食物的方式将需要发生巨大变化。'}
        ]},
-      {title:'The Rise of Lifelong Learning',cn:'终身学习的兴起',
+      {title:'Why laughter is the best medicine',cn:'为什么笑声是最好的良药',
        sentences:[
-        {en:'Good afternoon, and thank you for joining this important discussion on the significance of lifelong learning in the modern world.',cn:'下午好，感谢大家参加这场关于终身学习在当今世界重要性的讨论。'},
-        {en:'In today\'s rapidly evolving job market, the concept of continuous education has never been more critical for career success.',cn:'在当今快速发展的就业市场中，持续教育的理念对职业成功从未如此关键。'},
-        {en:'Research consistently indicates that the average professional will change careers five to seven times during their working life.',cn:'研究一致表明，普通专业人士在其职业生涯中会换五到七次职业。'},
-        {en:'Professionals across all industries are increasingly turning to online learning platforms and micro-credential programs.',cn:'各行各业的专业人士正越来越多地转向在线学习平台和微证书课程。'},
-        {en:'Part-time and flexible degree programs have gained enormous popularity, especially among working adults with family responsibilities.',cn:'非全日制和灵活的学位课程获得了巨大的欢迎，尤其是在有家庭责任的在职成年人中。'},
-        {en:'The traditional educational model of completing one degree and working in that field forever is rapidly becoming obsolete.',cn:'完成一个学位后终身从事该领域工作的传统教育模式正迅速变得过时。'},
-        {en:'Many forward-thinking employers now offer substantial tuition reimbursement programs to encourage ongoing professional development.',cn:'许多有远见的雇主现在提供可观的学费报销计划以鼓励持续的专业发展。'},
-        {en:'Studies show that employees who engage in regular learning activities are 47 percent more likely to be promoted to leadership positions.',cn:'研究表明，定期参与学习活动的员工晋升到领导职位的可能性高出47%。'},
-        {en:'The most valuable skill in the modern economy is arguably the ability to learn new things quickly and effectively.',cn:'现代经济中最有价值的技能可以说是快速有效地学习新事物的能力。'},
-        {en:'Online platforms have democratized access to education, making high-quality courses available to anyone with an internet connection.',cn:'在线平台使教育民主化，让任何有网络连接的人都能获得高质量课程。'},
-        {en:'Investing in your own education and skill development is the single best decision you can make for your long-term career prospects.',cn:'投资于自己的教育和技能发展，是你为长期职业前景所能做出的最好决定。'},
-        {en:'I hope this discussion has inspired you to think about your own learning journey and what steps you might take next.',cn:'我希望这次讨论能启发大家思考自己的学习旅程，以及接下来可以采取哪些步骤。'},
-        {en:'To conclude, lifelong learning is not just a career strategy; it is a mindset that enriches every aspect of our lives.',cn:'最后，终身学习不仅是一种职业策略，更是一种丰富我们生活方方面面的心态。'},
-        {en:'Thank you once again for your participation, and I wish you all the best in your personal learning adventures ahead.',cn:'再次感谢大家的参与，祝你们在未来的个人学习旅程中一切顺利。'}
+        {en:'Hello and welcome to the Health Report on BBC Radio. Today we are looking at something that costs nothing but could dramatically improve your wellbeing: laughter.',cn:'大家好，欢迎收听BBC广播的健康报道节目。今天我们来探讨一个不花一分钱却能极大改善你健康的东西：笑声。'},
+        {en:'Scientists have long been fascinated by the effects of laughter on the human body, and the research findings are quite remarkable.',cn:'科学家们长期以来一直对笑声对人体的影响着迷，而研究结果相当引人注目。'},
+        {en:'When we laugh, our brain releases endorphins, which are natural chemicals that reduce pain and create feelings of pleasure and happiness.',cn:'当我们大笑时，大脑会释放内啡肽，这是一种天然化学物质，可以减轻疼痛并产生愉悦和幸福感。'},
+        {en:'Studies have shown that just fifteen minutes of genuine laughter can increase pain tolerance by up to ten percent, which is comparable to the effects of some mild painkillers.',cn:'研究表明，仅仅十五分钟发自内心的大笑就能将疼痛耐受力提高多达百分之十，这堪比一些温和止痛药的效果。'},
+        {en:'Laughter also reduces the level of stress hormones like cortisol in the body, which can help lower blood pressure and improve immune system function.',cn:'笑声还能降低体内皮质醇等压力激素的水平，这有助于降低血压和改善免疫系统功能。'},
+        {en:'Perhaps most surprisingly, researchers have found that even the anticipation of laughter can produce positive physiological changes in the body.',cn:'也许最令人惊讶的是，研究人员发现，即使只是预期会笑，也能在体内产生积极的生理变化。'},
+        {en:'This has led to the development of laughter therapy programmes in hospitals and care homes across the country, with impressive results for patients recovering from surgery and chronic illness.',cn:'这促成了全国各地医院和护理院中笑声治疗项目的发展，对术后康复和慢性病患者取得了令人印象深刻的效果。'},
+        {en:'In Japan, there are even laughter yoga clubs where people gather regularly to engage in deliberate laughter exercises combined with yogic breathing.',cn:'在日本甚至有笑声瑜伽俱乐部，人们定期聚在一起进行有意识的笑声练习，结合瑜伽呼吸。'},
+        {en:'The social aspect of laughter is equally important, as shared laughter strengthens bonds between people and creates a sense of belonging and connection.',cn:'笑声的社交方面同样重要，因为共同的笑声能加强人与人之间的纽带，创造归属感和联结感。'},
+        {en:'So the next time you are feeling stressed or down, remember that watching a funny video or calling a humorous friend might be exactly what the doctor ordered.',cn:'所以，下次当你感到压力大或情绪低落时，记住看一段搞笑视频或给幽默的朋友打个电话可能正是医生开的处方。'},
+        {en:'As the old saying goes, laughter really might be the best medicine, and unlike most medicines, it comes with no side effects whatsoever.',cn:'正如老话所说，笑声真的可能是最好的良药，而且与大多数药物不同，它完全没有任何副作用。'}
        ]},
     ];
     const speakingTopics = [
@@ -814,8 +804,9 @@ function renderEnglish(){
 
   // Blind listening section - sentence by sentence
   html += `<div class="card">
-    <div class="card-title">🎧 今日盲听练习 <span style="font-size:11px;color:var(--text-light);font-weight:400;">${ed.generated}</span></div>
+    <div class="card-title">🎧 BBC盲听训练 <span style="font-size:11px;color:var(--text-light);font-weight:400;">${ed.generated}</span></div>
     <h4 style="font-size:14px;margin-bottom:8px;">${escHtml(ed.article.title)}</h4>
+    <div style="font-size:10px;color:var(--text-light);margin-bottom:6px;">📻 BBC Learning English · 雅思听力标准长度</div>
     <div class="audio-bar">
       <button class="audio-btn" onclick="speakAllSentences()">▶</button>
       <span style="font-size:11px;">全文朗读</span>
@@ -839,7 +830,7 @@ function renderEnglish(){
 
   // Dictation mode
   html += `<div class="card">
-    <div class="card-title">✍️ 原文听写 <span style="font-size:11px;color:var(--text-light);font-weight:400;">听音频，写下你听到的内容</span></div>
+    <div class="card-title">✍️ 文章听写训练 <span style="font-size:11px;color:var(--text-light);font-weight:400;">听音频，逐句写下内容</span></div>
     <div style="margin-bottom:10px;">
       <button class="btn btn-pink btn-sm" onclick="startDictation()">🔊 开始听写</button>
       <button class="btn btn-outline btn-sm" onclick="revealAllDictation()" style="margin-left:6px;">👁 显示原文</button>
