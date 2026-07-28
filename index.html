@@ -420,7 +420,7 @@ function renderInspiration(){
       html += `<div class="inspo-card fade-in">
         <span class="hot-badge">🔥 爆款</span>
         <h4>${escHtml(ins.title)}</h4>
-        <a class="link-btn" href="${escHtml(ins.link)}" target="_blank">📱 查看原视频 →</a>
+        <a class="link-btn" href="${escHtml(ins.link)}" onclick="openXHS(event,'${escHtml(ins.link)}','${escHtml(ins.webLink||'')}')">📱 打开小红书查看 →</a>
         <div class="reason">📌 火爆原因：${escHtml(ins.reason)}</div>
         <div class="adapt">🎬 适配创作思路：${escHtml(ins.adapt)}</div>
         <div style="font-size:10px;color:var(--text-light);margin-top:6px;">${ins.time}</div>
@@ -434,11 +434,11 @@ function collectInspiration(){
   const inspirations = DB.get('inspirations')||[];
   const now = getNow();
   const samples = [
-    {title:'在职读研+雅思备考vlog｜朝九晚五后的真实学习生活',link:'https://www.xiaohongshu.com/explore',reason:'"打工人+学生"双线叙事引发共鸣，真实感强，评论区大量在职人群互动',adapt:'拍摄下班后学习场景：通勤地铁背单词→到家后雅思听力训练→MPA课程笔记整理，结尾设问"你也边工作边备考吗？"引发互动'},
-    {title:'28岁研发工程师的一天｜实验室到自习室的日常',link:'https://www.xiaohongshu.com/explore',reason:'职业标签+年龄标签精准定位目标人群，生活化镜头语言降低观看门槛',adapt:'以第一人称记录：早上实验室操作片段→午休刷雅思口语→下班后MPA课堂笔记→睡前身材管理记录，穿插真实工作场景（不涉密）'},
-    {title:'雅思口语7.5分｜我的30天训练计划全分享',link:'https://www.xiaohongshu.com/explore',reason:'具体分数+可复制方法，干货密度高，收藏率极高',adapt:'拆解自己的口语训练流程：BBC跟读→多邻国打卡→剑桥真题模拟→自己录视频复盘发音，每步展示时间投入'},
-    {title:'每月花多少？北京打工人的真实消费记录',link:'https://www.xiaohongshu.com/explore',reason:'消费透明化引发讨论，评论区大量对比和共鸣',adapt:'用本工作台消费记账模块截图出镜，分享每月餐饮/购物/学习开支，传递"理性消费"价值观'},
-    {title:'非全硕士的周末｜上课+小组讨论+图书馆的一天',link:'https://www.xiaohongshu.com/explore',reason:'非全群体庞大但内容供给不足，精准切入蓝海',adapt:'周末vlog：上午MPA课��→午间小组讨论→下午图书馆自习→晚间雅思听力训练，突出时间管理技巧'},
+    {title:'在职读研+雅思备考vlog｜朝九晚五后的真实学习生活',link:'xhsdiscover://search/%E5%9C%A8%E8%81%8C%E8%AF%BB%E7%A0%94%20%E9%9B%85%E6%80%9D%E5%A4%87%E8%80%83%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=在职读研%20雅思备考%20vlog',reason:'"打工人+学生"双线叙事引发共鸣，真实感强，评论区大量在职人群互动',adapt:'拍摄下班后学习场景：通勤地铁背单词→到家后雅思听力训练→MPA课程笔记整理，结尾设问"你也边工作边备考吗？"引发互动'},
+    {title:'28岁研发工程师的一天｜实验室到自习室的日常',link:'xhsdiscover://search/%E7%A0%94%E5%8F%91%E5%B7%A5%E7%A8%8B%E5%B8%88%E7%9A%84%E4%B8%80%E5%A4%A9%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=研发工程师的一天%20vlog',reason:'职业标签+年龄标签精准定位目标人群，生活化镜头语言降低观看门槛',adapt:'以第一人称记录：早上实验室操作片段→午休刷雅思口语→下班后MPA课堂笔记→睡前身材管理记录，穿插真实工作场景（不涉密）'},
+    {title:'雅思口语7.5分｜我的30天训练计划全分享',link:'xhsdiscover://search/%E9%9B%85%E6%80%9D%E5%8F%A3%E8%AF%AD%20%E8%AE%AD%E7%BB%83%E8%AE%A1%E5%88%92',webLink:'https://www.xiaohongshu.com/search_result?keyword=雅思口语%20训练计划',reason:'具体分数+可复制方法，干货密度高，收藏率极高',adapt:'拆解自己的口语训练流程：BBC跟读→多邻国打卡→剑桥真题模拟→自己录视频复盘发音，每步展示时间投入'},
+    {title:'每月花多少？北京打工人的真实消费记录',link:'xhsdiscover://search/%E6%89%93%E5%B7%A5%E4%BA%BA%20%E6%B6%88%E8%B4%B9%E8%AE%B0%E5%BD%95%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=打工人%20消费记录%20vlog',reason:'消费透明化引发讨论，评论区大量对比和共鸣',adapt:'用本工作台消费记账模块截图出镜，分享每月餐饮/购物/学习开支，传递"理性消费"价值观'},
+    {title:'非全硕士的周末｜上课+小组讨论+图书馆的一天',link:'xhsdiscover://search/%E9%9D%9E%E5%85%A8%E7%A1%95%E5%A3%AB%20%E5%91%A8%E6%9C%AB%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=非全硕士%20周末%20vlog',reason:'非全群体庞大但内容供给不足，精准切入蓝海',adapt:'周末vlog：上午MPA课��→午间小组讨论→下午图书馆自习→晚间雅思听力训练，突出时间管理技巧'},
   ];
   const picked = samples[Math.floor(Math.random()*samples.length)];
   inspirations.push({...picked,time:now});
@@ -452,9 +452,9 @@ function renderRemix(){
   if(remixes.length===0){
     // Seed some data
     const seeds = [
-      {title:'#打工人备考日记 挑战30天雅思7分',link:'https://www.xiaohongshu.com/explore',script:'【开场 0-3s】镜头：闹钟响起，清晨6:30卧室。"30天雅思7分挑战，第1天。"\n【3-15s】快速洗漱+早餐场景，配音："早上6:30起床，先做一套剑桥听力真题。"\n【15-30s】镜头切到书桌，展示听力答题卡和分数。"今天听力对了28/40，还需要加强Section 3。"\n【30-45s】口语练习场景：对着镜子自拍，回答Part 2话题。"Describe a person you admire..."\n【45-60s】多邻国打卡界面+结束语。"评论区告诉我你在备考什么？一起加油！"',status:'available'},
-      {title:'#研发工程师的日常 实验室到自习室无缝切换',link:'https://www.xiaohongshu.com/explore',script:'【开场 0-3s】镜头：实验室走廊，穿白大褂的背影。"研发人的双面人生。"\n【3-20s】快剪：实验操作→数据分析→会议讨论（不展示敏感内容）\n【20-35s】下班打卡，切换场景到自习室。"下班后才是真正属于自己的时间。"\n【35-50s】MPA课本+笔记特写，穿插雅思词汇卡片。\n【50-60s】夜晚回家路上自拍。"你也在为梦想坚持吗？"',status:'available'},
-      {title:'#非全硕士的周末 时间管理大师的一天',link:'https://www.xiaohongshu.com/explore',script:'【开场 0-3s】镜头：周六清晨校园门口。"周末上课的非全人，冲！"\n【3-25s】课堂片段：PPT、笔记、小组讨论（远景，不拍他人正脸）\n【25-40s】午休：食堂+校园散步，配音："利用午休背了30个雅思核心词"\n【40-55s】下午图书馆自习：MPA论文阅读+雅思写作练习\n【55-60s】傍晚回家，预告明天内容',status:'available'},
+      {title:'#打工人备考日记 挑战30天雅思7分',link:'xhsdiscover://search/%E6%89%93%E5%B7%A5%E4%BA%BA%E5%A4%87%E8%80%83%E6%97%A5%E8%AE%B0%20%E9%9B%85%E6%80%9D7%E5%88%86',webLink:'https://www.xiaohongshu.com/search_result?keyword=打工人备考日记%20雅思7分',script:'【开场 0-3s】镜头：闹钟响起，清晨6:30卧室。"30天雅思7分挑战，第1天。"\n【3-15s】快速洗漱+早餐场景，配音："早上6:30起床，先做一套剑桥听力真题。"\n【15-30s】镜头切到书桌，展示听力答题卡和分数。"今天听力对了28/40，还需要加强Section 3。"\n【30-45s】口语练习场景：对着镜子自拍，回答Part 2话题。"Describe a person you admire..."\n【45-60s】多邻国打卡界面+结束语。"评论区告诉我你在备考什么？一起加油！"',status:'available'},
+      {title:'#研发工程师的日常 实验室到自习室无缝切换',link:'xhsdiscover://search/%E7%A0%94%E5%8F%91%E5%B7%A5%E7%A8%8B%E5%B8%88%E7%9A%84%E6%97%A5%E5%B8%B8%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=研发工程师的日常%20vlog',script:'【开场 0-3s】镜头：实验室走廊，穿白大褂的背影。"研发人的双面人生。"\n【3-20s】快剪：实验操作→数据分析→会议讨论（不展示敏感内容）\n【20-35s】下班打卡，切换场景到自习室。"下班后才是真正属于自己的时间。"\n【35-50s】MPA课本+笔记特写，穿插雅思词汇卡片。\n【50-60s】夜晚回家路上自拍。"你也在为梦想坚持吗？"',status:'available'},
+      {title:'#非全硕士的周末 时间管理大师的一天',link:'xhsdiscover://search/%E9%9D%9E%E5%85%A8%E7%A1%95%E5%A3%AB%E7%9A%84%E5%91%A8%E6%9C%AB%20%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86',webLink:'https://www.xiaohongshu.com/search_result?keyword=非全硕士的周末%20时间管理',script:'【开场 0-3s】镜头：周六清晨校园门口。"周末上课的非全人，冲！"\n【3-25s】课堂片段：PPT、笔记、小组讨论（远景，不拍他人正脸）\n【25-40s】午休：食堂+校园散步，配音："利用午休背了30个雅思核心词"\n【40-55s】下午图书馆自习：MPA论文阅读+雅思写作练习\n【55-60s】傍晚回家，预告明天内容',status:'available'},
     ];
     seeds.forEach(s=>remixes.push(s));
     DB.set('remixes',remixes);
@@ -477,7 +477,7 @@ function renderRemix(){
     const statusColor = {available:'tag-green',pending:'tag-orange',done:'tag-blue'}[r.status]||'';
     html += `<div class="script-card fade-in">
       <h4>${escHtml(r.title)}</h4>
-      <a class="link-btn" href="${escHtml(r.link)}" target="_blank">📱 查看原视频 →</a>
+      <a class="link-btn" href="${escHtml(r.link)}" onclick="openXHS(event,'${escHtml(r.link)}','${escHtml(r.webLink||'')}')">📱 打开小红书查看 →</a>
       <div class="script-content">${escHtml(r.script).replace(/\n/g,'<br>')}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span class="tag ${statusColor}">${statusLabel}</span>
@@ -1071,6 +1071,29 @@ function generateOutfits(measures){
 
 // ==================== UTILS ====================
 function escHtml(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// Smart XHS deep link: try to open app, fallback to web
+function openXHS(e, schemeUrl, webUrl){
+  e.preventDefault();
+  const now = Date.now();
+  // Try xhsdiscover:// scheme first (iOS/Android小红书App)
+  if(schemeUrl && schemeUrl.startsWith('xhsdiscover://')){
+    window.location.href = schemeUrl;
+    // If app not installed, fallback to web after timeout
+    setTimeout(function(){
+      if(Date.now() - now < 2500) return; // App opened successfully
+      if(webUrl){
+        window.open(webUrl, '_blank');
+      }else{
+        window.open('https://www.xiaohongshu.com/explore', '_blank');
+      }
+    }, 2000);
+  }else if(webUrl){
+    window.open(webUrl, '_blank');
+  }else{
+    window.open('https://www.xiaohongshu.com/explore', '_blank');
+  }
+}
 
 function showToast(msg){
   let toast = document.getElementById('toast');
