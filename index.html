@@ -719,9 +719,24 @@ function renderEnglish(){
   // Generate daily content if not exists
   if(!todayData){
     const articles = [
-      {title:'The Future of Work: How AI is Reshaping Careers',cn:'工作的未来：AI如何重塑职业',text:'The rapid advancement of artificial intelligence is fundamentally changing the way we work. From automated customer service to AI-powered data analysis, machines are taking over tasks that once required human intelligence. However, experts argue that AI will create more jobs than it eliminates, particularly in fields requiring creativity and emotional intelligence.'},
-      {title:'Climate Change and Urban Planning',cn:'气候变化与城市规划',text:'Cities around the world are facing unprecedented challenges due to climate change. Rising sea levels, extreme weather events, and heat waves are forcing urban planners to rethink how cities are designed. Green buildings, improved public transportation, and urban forests are becoming essential components of modern city planning.'},
-      {title:'The Rise of Lifelong Learning',cn:'终身学习的兴起',text:'In today\'s rapidly changing job market, the concept of lifelong learning has become more important than ever. Professionals are increasingly turning to online courses, micro-credentials, and part-time degrees to stay competitive. The traditional model of "study once, work forever" is being replaced by continuous skill development.'},
+      {title:'The Future of Work: How AI is Reshaping Careers',cn:'工作的未来：AI如何重塑职业',
+       sentences:[
+        {en:'The rapid advancement of artificial intelligence is fundamentally changing the way we work.',cn:'人工智能的快速发展正在从根本上改变我们的工作方式。'},
+        {en:'From automated customer service to AI-powered data analysis, machines are taking over tasks that once required human intelligence.',cn:'从自动化客服到AI驱动的数据分析，机器正在接管曾经需要人类智慧才能完成的任务。'},
+        {en:'However, experts argue that AI will create more jobs than it eliminates, particularly in fields requiring creativity and emotional intelligence.',cn:'然而，专家认为AI创造的工作岗位将多于其取代的，尤其是在需要创造力和情商的领域。'}
+       ]},
+      {title:'Climate Change and Urban Planning',cn:'气候变化与城市规划',
+       sentences:[
+        {en:'Cities around the world are facing unprecedented challenges due to climate change.',cn:'全球城市正面临气候变化带来的前所未有的挑战。'},
+        {en:'Rising sea levels, extreme weather events, and heat waves are forcing urban planners to rethink how cities are designed.',cn:'海平面上升、极端天气事件和热浪正迫使城市规划者重新思考城市设计方式。'},
+        {en:'Green buildings, improved public transportation, and urban forests are becoming essential components of modern city planning.',cn:'绿色建筑、改善的公共交通和城市森林正成为现代城市规划的重要组成部分。'}
+       ]},
+      {title:'The Rise of Lifelong Learning',cn:'终身学习的兴起',
+       sentences:[
+        {en:'In today\'s rapidly changing job market, the concept of lifelong learning has become more important than ever.',cn:'在当今快速变化的就业市场中，终身学习的理念变得比以往任何时候都更加重要。'},
+        {en:'Professionals are increasingly turning to online courses, micro-credentials, and part-time degrees to stay competitive.',cn:'专业人士越来越多地转向在线课程、微证书和非全日制学位以保持竞争力。'},
+        {en:'The traditional model of "study once, work forever" is being replaced by continuous skill development.',cn:'"一次学习，终身工作"的传统模式正被持续技能发展所取代。'}
+       ]},
     ];
     const speakingTopics = [
       {topic:'Describe a skill you want to learn',answer:'I would love to master public speaking. As a research engineer, I often need to present complex data to colleagues, but I sometimes struggle to make it engaging. I plan to practice by recording myself weekly, joining a local Toastmasters club, and studying TED talks for techniques. The ability to communicate ideas clearly is invaluable in any profession, especially when balancing work and part-time study like I do.'},
@@ -735,27 +750,43 @@ function renderEnglish(){
   }
 
   const ed = englishData[today];
+  const sentences = ed.article.sentences||[];
   let html = '';
 
-  // Blind listening section
+  // Blind listening section - sentence by sentence
   html += `<div class="card">
     <div class="card-title">🎧 今日盲听练习 <span style="font-size:11px;color:var(--text-light);font-weight:400;">${ed.generated}</span></div>
-    <h4 style="font-size:14px;margin-bottom:4px;">${escHtml(ed.article.title)}</h4>
+    <h4 style="font-size:14px;margin-bottom:8px;">${escHtml(ed.article.title)}</h4>
     <div class="audio-bar">
-      <button class="audio-btn" onclick="speakText()">▶</button>
-      <span style="font-size:11px;">逐句朗读</span>
+      <button class="audio-btn" onclick="speakAllSentences()">▶</button>
+      <span style="font-size:11px;">全文朗读</span>
       <span class="audio-speed" onclick="cycleSpeed(this)">1x</span>
+    </div>`;
+
+  // Sentence-by-sentence display
+  html += `<div style="margin:10px 0;" id="sentenceArea">`;
+  sentences.forEach((s,i)=>{
+    html += `<div class="sent-row" id="sent_${i}" style="padding:10px 0;border-bottom:1px solid #f5f0f5;">
+      <div style="display:flex;align-items:flex-start;gap:8px;">
+        <button class="audio-btn" style="width:28px;height:28px;font-size:12px;flex-shrink:0;" onclick="speakSentence(${i})">▶</button>
+        <div style="flex:1;">
+          <div style="font-size:12px;line-height:1.6;color:var(--text);" id="sen_en_${i}">${escHtml(s.en)}</div>
+          <div style="font-size:11px;line-height:1.5;color:var(--text-light);margin-top:4px;" id="sen_cn_${i}">${escHtml(s.cn)}</div>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // Dictation mode
+  html += `<div class="card">
+    <div class="card-title">✍️ 原文听写 <span style="font-size:11px;color:var(--text-light);font-weight:400;">听音频，写下你听到的内容</span></div>
+    <div style="margin-bottom:10px;">
+      <button class="btn btn-pink btn-sm" onclick="startDictation()">🔊 开始听写</button>
+      <button class="btn btn-outline btn-sm" onclick="revealAllDictation()" style="margin-left:6px;">👁 显示原文</button>
+      <span style="font-size:11px;color:var(--text-light);margin-left:8px;" id="dictProgress"></span>
     </div>
-    <div style="margin:8px 0;padding:10px;background:#faf8f9;border-radius:8px;font-size:12px;line-height:1.7;display:none;" id="enText">
-      ${escHtml(ed.article.text)}
-    </div>
-    <div style="margin:8px 0;padding:10px;background:#fff8e1;border-radius:8px;font-size:12px;line-height:1.7;display:none;" id="cnText">
-      ${escHtml(ed.article.cn)}
-    </div>
-    <div style="display:flex;gap:8px;margin-top:6px;">
-      <button class="btn btn-outline btn-sm" onclick="toggleEnText()">📖 英文原文</button>
-      <button class="btn btn-outline btn-sm" onclick="toggleCnText()">🈯 中文译文</button>
-    </div>
+    <div id="dictationArea"></div>
   </div>`;
 
   // Vocabulary training
@@ -775,27 +806,49 @@ function renderEnglish(){
   document.getElementById('content').innerHTML = html;
 
   // Render vocab after DOM ready
-  setTimeout(()=>renderVocab(ed), 50);
+  setTimeout(()=>{
+    renderVocab(ed);
+    renderDictation(sentences);
+  }, 50);
 }
 
-function toggleEnText(){const el=document.getElementById('enText');el.style.display=el.style.display==='none'?'block':'none';}
-function toggleCnText(){const el=document.getElementById('cnText');el.style.display=el.style.display==='none'?'block':'none';}
+// Sentence speaking
 let speechRate = 1;
+let currentSentenceIdx = -1;
+
 function cycleSpeed(el){
   speechRate = speechRate===1?1.5:speechRate===1.5?0.75:1;
   el.textContent = speechRate+'x';
 }
-function speakText(){
-  const el = document.getElementById('enText');
-  if(el.style.display==='none') el.style.display='block';
-  const text = el.textContent.trim();
-  if(text && 'speechSynthesis' in window){
+
+function speakSentence(idx){
+  const today = getToday();
+  const ed = (DB.get('english_data')||{})[today];
+  if(!ed) return;
+  const s = ed.article.sentences[idx];
+  if(s && 'speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    currentSentenceIdx = idx;
+    const u = new SpeechSynthesisUtterance(s.en);
+    u.rate = speechRate; u.lang='en-US';
+    u.onend = ()=>{ currentSentenceIdx = -1; };
+    window.speechSynthesis.speak(u);
+  }
+}
+
+function speakAllSentences(){
+  const today = getToday();
+  const ed = (DB.get('english_data')||{})[today];
+  if(!ed) return;
+  const text = ed.article.sentences.map(s=>s.en).join(' ');
+  if('speechSynthesis' in window){
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = speechRate; u.lang='en-US';
     window.speechSynthesis.speak(u);
   }
 }
+
 function speakAnswer(){
   const today = getToday();
   const ed = (DB.get('english_data')||{})[today];
@@ -807,9 +860,100 @@ function speakAnswer(){
   }
 }
 
+// Dictation
+function renderDictation(sentences){
+  const area = document.getElementById('dictationArea');
+  if(!area) return;
+  let html = '';
+  sentences.forEach((s,i)=>{
+    html += `<div style="margin-bottom:10px;padding:10px;background:#faf8f9;border-radius:10px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <button class="audio-btn" style="width:26px;height:26px;font-size:11px;" onclick="speakSentence(${i})">▶</button>
+        <span style="font-size:11px;color:var(--text-light);">第${i+1}句</span>
+        <span style="font-size:11px;color:var(--pink-300);margin-left:auto;cursor:pointer;display:none;" id="dictHint_${i}" onclick="showDictHint(${i})">💡 提示</span>
+      </div>
+      <textarea id="dictInput_${i}" placeholder="在此输入你听到的内容..." style="min-height:44px;font-size:12px;" oninput="checkDictation(${i})"></textarea>
+      <div id="dictResult_${i}" style="font-size:11px;margin-top:4px;display:none;"></div>
+    </div>`;
+  });
+  area.innerHTML = html;
+  document.getElementById('dictProgress').textContent = `共 ${sentences.length} 句`;
+}
+
+function startDictation(){
+  const today = getToday();
+  const ed = (DB.get('english_data')||{})[today];
+  if(!ed) return;
+  const sentences = ed.article.sentences;
+  // Clear all inputs
+  sentences.forEach((s,i)=>{
+    const inp = document.getElementById('dictInput_'+i);
+    const res = document.getElementById('dictResult_'+i);
+    const hint = document.getElementById('dictHint_'+i);
+    if(inp){inp.value='';inp.style.background='#faf8f9';}
+    if(res){res.style.display='none';}
+    if(hint){hint.style.display='none';}
+  });
+  document.getElementById('dictProgress').textContent = `共 ${sentences.length} 句 · 请逐句听写`;
+  // Auto-play first sentence
+  speakSentence(0);
+}
+
+function checkDictation(idx){
+  const today = getToday();
+  const ed = (DB.get('english_data')||{})[today];
+  if(!ed) return;
+  const s = ed.article.sentences[idx];
+  const inp = document.getElementById('dictInput_'+idx);
+  const res = document.getElementById('dictResult_'+idx);
+  const hint = document.getElementById('dictHint_'+idx);
+  if(!inp||!res) return;
+  const userText = inp.value.trim();
+  if(userText.length < 5) {res.style.display='none';if(hint)hint.style.display='none';return;}
+
+  // Simple comparison: word-level match
+  const userWords = userText.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(w=>w);
+  const correctWords = s.en.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(w=>w);
+  let matched = 0;
+  const displayWords = correctWords.map(cw=>{
+    const found = userWords.includes(cw);
+    if(found) matched++;
+    return found ? `<span style="color:#66bb6a;">${cw}</span>` : `<span style="color:#e57373;text-decoration:underline;">${cw}</span>`;
+  }).join(' ');
+
+  const pct = Math.round(matched/correctWords.length*100);
+  const emoji = pct>=90?'🎉':pct>=60?'👍':'💪';
+  res.style.display='block';
+  res.innerHTML = `${emoji} 匹配度 ${pct}%<br>${displayWords}`;
+  if(hint) hint.style.display = pct<90?'inline':'none';
+  inp.style.background = pct>=90?'#e8f5e9':pct>=60?'#fff8e1':'#fce4ec';
+}
+
+function showDictHint(idx){
+  const today = getToday();
+  const ed = (DB.get('english_data')||{})[today];
+  if(!ed) return;
+  const s = ed.article.sentences[idx];
+  const inp = document.getElementById('dictInput_'+idx);
+  if(inp){inp.value = s.en; inp.style.background='#e8f5e9';}
+  checkDictation(idx);
+}
+
+function revealAllDictation(){
+  const today = getToday();
+  const ed = (DB.get('english_data')||{})[today];
+  if(!ed) return;
+  ed.article.sentences.forEach((s,i)=>{
+    const inp = document.getElementById('dictInput_'+i);
+    if(inp){inp.value = s.en; inp.style.background='#e3f2fd';}
+    checkDictation(i);
+  });
+}
+
 // Word training from article
-function extractVocab(articleText){
-  const words = articleText.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(w=>w.length>4);
+function extractVocab(sentences){
+  const fullText = sentences.map(s=>s.en).join(' ');
+  const words = fullText.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(w=>w.length>4);
   const unique = [...new Set(words)];
   const shuffled = unique.sort(()=>Math.random()-0.5).slice(0,10);
   return shuffled.map(w=>({
@@ -835,7 +979,7 @@ function renderVocab(ed){
   const today = getToday();
   const vocabData = DB.get('vocab_data')||{};
   if(!vocabData[today]){
-    vocabData[today] = extractVocab(ed.article.text);
+    vocabData[today] = extractVocab(ed.article.sentences);
     DB.set('vocab_data',vocabData);
   }
   const words = vocabData[today];
