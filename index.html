@@ -212,7 +212,8 @@ function initDB(){
     });
     DB.set('expenses',{});
     DB.set('reviews',[]);
-    DB.set('inspirations',[]);
+    DB.set('inspirations',{});
+    DB.set('remixes_all',{});
     DB.set('remixes',[]);
     DB.set('worklogs',[]);
     DB.set('body_measures',{height:165,waist:68,hip:92,thigh:52,calf:34,arm:26,shoulder:38,leg_length:98});
@@ -244,6 +245,28 @@ function initDB(){
   const worklogs = DB.get('worklogs')||[];
   const todayLog = worklogs.find(w=>w.date===today);
   if(!todayLog){worklogs.push({date:today,completed:'',harvest:'',plan:''});DB.set('worklogs',worklogs);}
+  // Migrate old array-format data to date-grouped format
+  migrateOldData();
+}
+
+function migrateOldData(){
+  // Migrate inspirations: old array format → date-grouped object
+  const oldInsp = DB.get('inspirations');
+  if(Array.isArray(oldInsp) && oldInsp.length>0){
+    const today = getToday();
+    const newInsp = {};
+    newInsp[today] = oldInsp;
+    DB.set('inspirations',newInsp);
+  }
+  // Migrate remixes: old array format → date-grouped object  
+  const oldRem = DB.get('remixes');
+  if(Array.isArray(oldRem) && oldRem.length>0){
+    const today = getToday();
+    const newRem = {};
+    newRem[today] = oldRem;
+    DB.set('remixes_all',newRem);
+    DB.set('remixes',[]);
+  }
 }
 
 function getToday(){return new Date().toISOString().split('T')[0];}
@@ -408,59 +431,121 @@ function addTodo(date){
   renderDaily(date);
 }
 
-// 2. 选题灵感
-function renderInspiration(){
-  const inspirations = DB.get('inspirations')||[];
-  let html = `<button class="btn btn-pink" onclick="collectInspiration()" style="margin-bottom:12px;width:100%;">🔍 采集今日热点</button>`;
+// 2. 选题灵感（每日自动10条）
+function renderInspiration(dateOverride){
+  const today = dateOverride || getToday();
+  const allInspirations = DB.get('inspirations')||{};
+  const inspirations = allInspirations[today]||[];
+
+  // Auto-generate 10 items for today if empty
+  if(inspirations.length===0 && today===getToday()){
+    generateDailyInspirations(today);
+    setTimeout(()=>renderInspiration(),100);
+    return;
+  }
+
+  let html = `<div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button class="btn btn-pink" onclick="regenerateInspirations()" style="flex:1;">🔄 重新生成今日10条</button>
+    <button class="btn btn-outline btn-sm" onclick="renderInspiration()">今天</button>
+  </div>`;
+
+  // Date nav for history
+  const dates = Object.keys(allInspirations).sort().reverse();
+  if(dates.length>0){
+    html += `<div class="date-nav">
+      <button onclick="renderInspiration(navDate('${today}',-1))">◀</button>
+      <div class="date-display">${today}${today===getToday()?' (今天)':''} · ${inspirations.length}条灵感</div>
+      <button onclick="renderInspiration(navDate('${today}',1))">▶</button>
+    </div>`;
+  }
 
   if(inspirations.length===0){
-    html += `<div class="empty-state"><div class="icon">💡</div><div>暂无选题灵感<br>点击上方按钮采集今日热点</div></div>`;
+    html += `<div class="empty-state"><div class="icon">💡</div><div>该日期暂无选题灵感</div></div>`;
   }else{
-    [...inspirations].reverse().forEach((ins,i)=>{
+    inspirations.forEach((ins,i)=>{
       html += `<div class="inspo-card fade-in">
         <span class="hot-badge">🔥 爆款</span>
         <h4>${escHtml(ins.title)}</h4>
-        <a class="link-btn" href="${escHtml(ins.link)}" onclick="openXHS(event,'${escHtml(ins.link)}','${escHtml(ins.webLink||'')}')">📱 打开小红书查看 →</a>
+        <a class="link-btn" href="${escHtml(ins.link)}" onclick="openXHS(event,'${escHtml(ins.link)}','${escHtml(ins.webLink||'')}')">📱 看相关视频 →</a>
         <div class="reason">📌 火爆原因：${escHtml(ins.reason)}</div>
         <div class="adapt">🎬 适配创作思路：${escHtml(ins.adapt)}</div>
-        <div style="font-size:10px;color:var(--text-light);margin-top:6px;">${ins.time}</div>
       </div>`;
     });
   }
+
+  // History dates
+  if(dates.length>1){
+    html += `<div class="card" style="margin-top:12px;"><div class="card-title">📅 历史灵感</div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+    dates.slice(0,14).forEach(d=>{
+      const cnt = (allInspirations[d]||[]).length;
+      html += `<span class="tag tag-pink" style="cursor:pointer;" onclick="renderInspiration('${d}')">${d.slice(5)} (${cnt}条)</span>`;
+    });
+    html += `</div></div>`;
+  }
+
   document.getElementById('content').innerHTML = html;
 }
 
-function collectInspiration(){
-  const inspirations = DB.get('inspirations')||[];
+function generateDailyInspirations(date){
+  const allInspirations = DB.get('inspirations')||{};
+  if(allInspirations[date]&&allInspirations[date].length>0) return;
   const now = getNow();
   const samples = [
     {title:'在职读研+雅思备考vlog｜朝九晚五后的真实学习生活',link:'xhsdiscover://search/%E5%9C%A8%E8%81%8C%E8%AF%BB%E7%A0%94%20%E9%9B%85%E6%80%9D%E5%A4%87%E8%80%83%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=在职读研%20雅思备考%20vlog',reason:'"打工人+学生"双线叙事引发共鸣，真实感强，评论区大量在职人群互动',adapt:'拍摄下班后学习场景：通勤地铁背单词→到家后雅思听力训练→MPA课程笔记整理，结尾设问"你也边工作边备考吗？"引发互动'},
     {title:'28岁研发工程师的一天｜实验室到自习室的日常',link:'xhsdiscover://search/%E7%A0%94%E5%8F%91%E5%B7%A5%E7%A8%8B%E5%B8%88%E7%9A%84%E4%B8%80%E5%A4%A9%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=研发工程师的一天%20vlog',reason:'职业标签+年龄标签精准定位目标人群，生活化镜头语言降低观看门槛',adapt:'以第一人称记录：早上实验室操作片段→午休刷雅思口语→下班后MPA课堂笔记→睡前身材管理记录，穿插真实工作场景（不涉密）'},
     {title:'雅思口语7.5分｜我的30天训练计划全分享',link:'xhsdiscover://search/%E9%9B%85%E6%80%9D%E5%8F%A3%E8%AF%AD%20%E8%AE%AD%E7%BB%83%E8%AE%A1%E5%88%92',webLink:'https://www.xiaohongshu.com/search_result?keyword=雅思口语%20训练计划',reason:'具体分数+可复制方法，干货密度高，收藏率极高',adapt:'拆解自己的口语训练流程：BBC跟读→多邻国打卡→剑桥真题模拟→自己录视频复盘发音，每步展示时间投入'},
     {title:'每月花多少？北京打工人的真实消费记录',link:'xhsdiscover://search/%E6%89%93%E5%B7%A5%E4%BA%BA%20%E6%B6%88%E8%B4%B9%E8%AE%B0%E5%BD%95%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=打工人%20消费记录%20vlog',reason:'消费透明化引发讨论，评论区大量对比和共鸣',adapt:'用本工作台消费记账模块截图出镜，分享每月餐饮/购物/学习开支，传递"理性消费"价值观'},
-    {title:'非全硕士的周末｜上课+小组讨论+图书馆的一天',link:'xhsdiscover://search/%E9%9D%9E%E5%85%A8%E7%A1%95%E5%A3%AB%20%E5%91%A8%E6%9C%AB%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=非全硕士%20周末%20vlog',reason:'非全群体庞大但内容供给不足，精准切入蓝海',adapt:'周末vlog：上午MPA课��→午间小组讨论→下午图书馆自习→晚间雅思听力训练，突出时间管理技巧'},
+    {title:'非全硕士的周末｜上课+小组讨论+图书馆的一天',link:'xhsdiscover://search/%E9%9D%9E%E5%85%A8%E7%A1%95%E5%A3%AB%20%E5%91%A8%E6%9C%AB%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=非全硕士%20周末%20vlog',reason:'非全群体庞大但内容供给不足，精准切入蓝海',adapt:'周末vlog：上午MPA课堂→午间小组讨论→下午图书馆自习→晚间雅思听力训练，突出时间管理技巧'},
+    {title:'上班族雅思7分｜每天2小时高效备考法',link:'xhsdiscover://search/%E4%B8%8A%E7%8F%AD%E6%97%8F%20%E9%9B%85%E6%80%9D%20%E9%AB%98%E6%95%88%E5%A4%87%E8%80%83',webLink:'https://www.xiaohongshu.com/search_result?keyword=上班族%20雅思%20高效备考',reason:'时间管理类内容天然高收藏，上班族群体庞大且付费意愿强',adapt:'展示自己的时间分配表：通勤30min听力+午休30min口语+晚间60min阅读写作，配上真实成绩截图更有说服力'},
+    {title:'生物医药行业打工人｜高薪背后的真实生活',link:'xhsdiscover://search/%E7%94%9F%E7%89%A9%E5%8C%BB%E8%8D%AF%20%E6%89%93%E5%B7%A5%E4%BA%BA%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=生物医药%20打工人%20vlog',reason:'行业垂直标签精准吸粉，医药从业者群体粘性高',adapt:'实验室日常+下班学习两不误的节奏，展现"研发人也能把生活过得精致"的反差感'},
+    {title:'30天多邻国打卡挑战｜从零到流利的秘密',link:'xhsdiscover://search/%E5%A4%9A%E9%82%BB%E5%9B%BD%20%E6%89%93%E5%8D%A1%20%E6%8C%91%E6%88%98',webLink:'https://www.xiaohongshu.com/search_result?keyword=多邻国%20打卡%20挑战',reason:'打卡类内容互动率极高，每日更新形成追更效应',adapt:'每天展示多邻国打卡界面+当日学习时长统计，周末做周总结对比进步曲线'},
+    {title:'北京租房党｜独居女孩的省钱改造日记',link:'xhsdiscover://search/%E5%8C%97%E4%BA%AC%E7%A7%9F%E6%88%BF%20%E7%8B%AC%E5%B1%85%20%E6%94%B9%E9%80%A0',webLink:'https://www.xiaohongshu.com/search_result?keyword=北京租房%20独居%20改造',reason:'生活类内容流量大盘，租房/独居/改造三重标签叠加',adapt:'拍摄书桌学习区改造前后对比，强调"小空间也能高效学习"，植入工作台使用场景'},
+    {title:'考研失败后｜我用非全硕士逆袭的真实经历',link:'xhsdiscover://search/%E9%9D%9E%E5%85%A8%E7%A1%95%E5%A3%AB%20%E9%80%86%E8%A2%AD%20%E7%BB%8F%E5%8E%86',webLink:'https://www.xiaohongshu.com/search_result?keyword=非全硕士%20逆袭%20经历',reason:'逆袭叙事天然高传播，非全话题评论区讨论活跃',adapt:'以"我曾经也很迷茫"开头，讲述选择非全的心路历程，结尾传递正能量'},
   ];
-  const picked = samples[Math.floor(Math.random()*samples.length)];
-  inspirations.push({...picked,time:now});
-  DB.set('inspirations',inspirations);
+  const shuffled = [...samples].sort(()=>Math.random()-0.5);
+  const picked = shuffled.slice(0,10);
+  allInspirations[date] = picked.map(p=>({...p,time:now}));
+  DB.set('inspirations',allInspirations);
+}
+
+function regenerateInspirations(){
+  const today = getToday();
+  const allInspirations = DB.get('inspirations')||{};
+  allInspirations[today] = [];
+  DB.set('inspirations',allInspirations);
+  generateDailyInspirations(today);
   renderInspiration();
 }
 
-// 3. 爆款二创
-function renderRemix(){
-  const remixes = DB.get('remixes')||[];
-  if(remixes.length===0){
-    // Seed some data
-    const seeds = [
-      {title:'#打工人备考日记 挑战30天雅思7分',link:'xhsdiscover://search/%E6%89%93%E5%B7%A5%E4%BA%BA%E5%A4%87%E8%80%83%E6%97%A5%E8%AE%B0%20%E9%9B%85%E6%80%9D7%E5%88%86',webLink:'https://www.xiaohongshu.com/search_result?keyword=打工人备考日记%20雅思7分',script:'【开场 0-3s】镜头：闹钟响起，清晨6:30卧室。"30天雅思7分挑战，第1天。"\n【3-15s】快速洗漱+早餐场景，配音："早上6:30起床，先做一套剑桥听力真题。"\n【15-30s】镜头切到书桌，展示听力答题卡和分数。"今天听力对了28/40，还需要加强Section 3。"\n【30-45s】口语练习场景：对着镜子自拍，回答Part 2话题。"Describe a person you admire..."\n【45-60s】多邻国打卡界面+结束语。"评论区告诉我你在备考什么？一起加油！"',status:'available'},
-      {title:'#研发工程师的日常 实验室到自习室无缝切换',link:'xhsdiscover://search/%E7%A0%94%E5%8F%91%E5%B7%A5%E7%A8%8B%E5%B8%88%E7%9A%84%E6%97%A5%E5%B8%B8%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=研发工程师的日常%20vlog',script:'【开场 0-3s】镜头：实验室走廊，穿白大褂的背影。"研发人的双面人生。"\n【3-20s】快剪：实验操作→数据分析→会议讨论（不展示敏感内容）\n【20-35s】下班打卡，切换场景到自习室。"下班后才是真正属于自己的时间。"\n【35-50s】MPA课本+笔记特写，穿插雅思词汇卡片。\n【50-60s】夜晚回家路上自拍。"你也在为梦想坚持吗？"',status:'available'},
-      {title:'#非全硕士的周末 时间管理大师的一天',link:'xhsdiscover://search/%E9%9D%9E%E5%85%A8%E7%A1%95%E5%A3%AB%E7%9A%84%E5%91%A8%E6%9C%AB%20%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86',webLink:'https://www.xiaohongshu.com/search_result?keyword=非全硕士的周末%20时间管理',script:'【开场 0-3s】镜头：周六清晨校园门口。"周末上课的非全人，冲！"\n【3-25s】课堂片段：PPT、笔记、小组讨论（远景，不拍他人正脸）\n【25-40s】午休：食堂+校园散步，配音："利用午休背了30个雅思核心词"\n【40-55s】下午图书馆自习：MPA论文阅读+雅思写作练习\n【55-60s】傍晚回家，预告明天内容',status:'available'},
-    ];
-    seeds.forEach(s=>remixes.push(s));
-    DB.set('remixes',remixes);
+// 3. 爆款二创（每日自动更新）
+function renderRemix(dateOverride){
+  const today = dateOverride || getToday();
+  const allRemixes = DB.get('remixes_all')||{};
+  const remixes = allRemixes[today]||[];
+
+  // Auto-generate for today if empty
+  if(remixes.length===0 && today===getToday()){
+    generateDailyRemixes(today);
+    setTimeout(()=>renderRemix(),100);
+    return;
   }
 
-  let html = `<div class="card"><div class="card-title">🎬 筛选条件</div>
+  let html = `<div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button class="btn btn-pink" onclick="regenerateRemixes()" style="flex:1;">🔄 重新生成今日素材</button>
+    <button class="btn btn-outline btn-sm" onclick="renderRemix()">今天</button>
+  </div>`;
+
+  // Date nav
+  const dates = Object.keys(allRemixes).sort().reverse();
+  if(dates.length>0){
+    html += `<div class="date-nav">
+      <button onclick="renderRemix(navDate('${today}',-1))">◀</button>
+      <div class="date-display">${today}${today===getToday()?' (今天)':''} · ${remixes.length}条素材</div>
+      <button onclick="renderRemix(navDate('${today}',1))">▶</button>
+    </div>`;
+  }
+
+  html += `<div class="card"><div class="card-title">🎬 筛选条件</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <span class="status-tag active-status" onclick="filterRemix('all',this)">全部</span>
       <span class="status-tag" onclick="filterRemix('available',this)">可用</span>
@@ -473,18 +558,19 @@ function renderRemix(){
   const filtered = filter==='all'?remixes:remixes.filter(r=>r.status===filter);
 
   filtered.forEach((r,i)=>{
+    const realIdx = remixes.indexOf(r);
     const statusLabel = {available:'可用',pending:'待拍摄',done:'已拍摄'}[r.status]||r.status;
     const statusColor = {available:'tag-green',pending:'tag-orange',done:'tag-blue'}[r.status]||'';
     html += `<div class="script-card fade-in">
       <h4>${escHtml(r.title)}</h4>
-      <a class="link-btn" href="${escHtml(r.link)}" onclick="openXHS(event,'${escHtml(r.link)}','${escHtml(r.webLink||'')}')">📱 打开小红书查看 →</a>
+      <a class="link-btn" href="${escHtml(r.link)}" onclick="openXHS(event,'${escHtml(r.link)}','${escHtml(r.webLink||'')}')">📱 看相关视频 →</a>
       <div class="script-content">${escHtml(r.script).replace(/\n/g,'<br>')}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span class="tag ${statusColor}">${statusLabel}</span>
         <div class="status-tags">
-          <span class="status-tag${r.status==='available'?' active-status':''}" onclick="setRemixStatus(${remixes.indexOf(r)},'available')">可用</span>
-          <span class="status-tag${r.status==='pending'?' active-status':''}" onclick="setRemixStatus(${remixes.indexOf(r)},'pending')">待拍摄</span>
-          <span class="status-tag${r.status==='done'?' active-status':''}" onclick="setRemixStatus(${remixes.indexOf(r)},'done')">已拍摄</span>
+          <span class="status-tag${r.status==='available'?' active-status':''}" onclick="setRemixStatus(${realIdx},'available','${today}')">可用</span>
+          <span class="status-tag${r.status==='pending'?' active-status':''}" onclick="setRemixStatus(${realIdx},'pending','${today}')">待拍摄</span>
+          <span class="status-tag${r.status==='done'?' active-status':''}" onclick="setRemixStatus(${realIdx},'done','${today}')">已拍摄</span>
         </div>
       </div>
     </div>`;
@@ -498,6 +584,29 @@ function renderRemix(){
   document.getElementById('content').dataset.remixFilter = filter;
 }
 
+function generateDailyRemixes(date){
+  const allRemixes = DB.get('remixes_all')||{};
+  if(allRemixes[date]&&allRemixes[date].length>0) return;
+  const seeds = [
+    {title:'#打工人备考日记 挑战30天雅思7分',link:'xhsdiscover://search/%E6%89%93%E5%B7%A5%E4%BA%BA%E5%A4%87%E8%80%83%E6%97%A5%E8%AE%B0%20%E9%9B%85%E6%80%9D7%E5%88%86',webLink:'https://www.xiaohongshu.com/search_result?keyword=打工人备考日记%20雅思7分',script:'【开场 0-3s】镜头：闹钟响起，清晨6:30卧室。"30天雅思7分挑战，第1天。"\n【3-15s】快速洗漱+早餐场景，配音："早上6:30起床，先做一套剑桥听力真题。"\n【15-30s】镜头切到书桌，展示听力答题卡和分数。"今天听力对了28/40，还需要加强Section 3。"\n【30-45s】口语练习场景：对着镜子自拍，回答Part 2话题。"Describe a person you admire..."\n【45-60s】多邻国打卡界面+结束语。"评论区告诉我你在备考什么？一起加油！"',status:'available'},
+    {title:'#研发工程师的日常 实验室到自习室无缝切换',link:'xhsdiscover://search/%E7%A0%94%E5%8F%91%E5%B7%A5%E7%A8%8B%E5%B8%88%E7%9A%84%E6%97%A5%E5%B8%B8%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=研发工程师的日常%20vlog',script:'【开场 0-3s】镜头：实验室走廊，穿白大褂的背影。"研发人的双面人生。"\n【3-20s】快剪：实验操作→数据分析→会议讨论（不展示敏感内容）\n【20-35s】下班打卡，切换场景到自习室。"下班后才是真正属于自己的时间。"\n【35-50s】MPA课本+笔记特写，穿插雅思词汇卡片。\n【50-60s】夜晚回家路上自拍。"你也在为梦想坚持吗？"',status:'available'},
+    {title:'#非全硕士的周末 时间管理大师的一天',link:'xhsdiscover://search/%E9%9D%9E%E5%85%A8%E7%A1%95%E5%A3%AB%E7%9A%84%E5%91%A8%E6%9C%AB%20%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86',webLink:'https://www.xiaohongshu.com/search_result?keyword=非全硕士的周末%20时间管理',script:'【开场 0-3s】镜头：周六清晨校园门口。"周末上课的非全人，冲！"\n【3-25s】课堂片段：PPT、笔记、小组讨论（远景，不拍他人正脸）\n【25-40s】午休：食堂+校园散步，配音："利用午休背了30个雅思核心词"\n【40-55s】下午图书馆自习：MPA论文阅读+雅思写作练习\n【55-60s】傍晚回家，预告明天内容',status:'available'},
+    {title:'#生物医药打工人的一天 实验室vlog',link:'xhsdiscover://search/%E7%94%9F%E7%89%A9%E5%8C%BB%E8%8D%AF%20%E5%AE%9E%E9%AA%8C%E5%AE%A4%20vlog',webLink:'https://www.xiaohongshu.com/search_result?keyword=生物医药%20实验室%20vlog',script:'【开场 0-3s】镜头：实验室全景，穿实验服。"一个生物医药研发人的普通一天。"\n【3-20s】快速展示实验准备、仪器操作（远景，不涉密）\n【20-35s】午休时间：食堂+背单词app特写\n【35-50s】下午：数据分析+文献阅读，穿插MPA课本\n【50-60s】下班打卡+结束语："科研很苦，但坚持很酷。"',status:'available'},
+    {title:'#雅思听力8分 我的影子跟读训练法',link:'xhsdiscover://search/%E9%9B%85%E6%80%9D%E5%90%AC%E5%8A%9B%20%E5%BD%B1%E5%AD%90%E8%B7%9F%E8%AF%BB',webLink:'https://www.xiaohongshu.com/search_result?keyword=雅思听力%20影子跟读',script:'【开场 0-3s】镜头：BBC音频播放中，笔记本上密密麻麻的跟读记录。"雅思听力8分，全靠这个影子跟读法。"\n【3-20s】讲解方法：选一段BBC→听一遍→逐句跟读→录音对比\n【20-40s】实操演示：播放原文→暂停→跟读→回放对比发音\n【40-55s】展示30天跟读进步曲线，听力分数变化\n【55-60s】"每天30分钟，坚持一个月你也能做到。"',status:'available'},
+  ];
+  allRemixes[date] = seeds.map(s=>({...s}));
+  DB.set('remixes_all',allRemixes);
+}
+
+function regenerateRemixes(){
+  const today = getToday();
+  const allRemixes = DB.get('remixes_all')||{};
+  allRemixes[today] = [];
+  DB.set('remixes_all',allRemixes);
+  generateDailyRemixes(today);
+  renderRemix();
+}
+
 function filterRemix(status,el){
   document.querySelectorAll('.status-tag').forEach(t=>t.classList.remove('active-status'));
   if(el) el.classList.add('active-status');
@@ -505,10 +614,11 @@ function filterRemix(status,el){
   renderRemix();
 }
 
-function setRemixStatus(idx,status){
-  const remixes = DB.get('remixes')||[];
+function setRemixStatus(idx,status,date){
+  const allRemixes = DB.get('remixes_all')||{};
+  const remixes = allRemixes[date]||[];
   if(remixes[idx]){remixes[idx].status=status;}
-  DB.set('remixes',remixes);
+  DB.set('remixes_all',allRemixes);
   renderRemix();
 }
 
@@ -648,6 +758,12 @@ function renderEnglish(){
     </div>
   </div>`;
 
+  // Vocabulary training
+  html += `<div class="card">
+    <div class="card-title">📝 单词训练 <span style="font-size:11px;color:var(--text-light);font-weight:400;">盲听文章核心词汇</span></div>
+    <div id="vocabArea"></div>
+  </div>`;
+
   // Speaking section
   html += `<div class="card ielts-card">
     <div class="card-title">🗣️ 今日口语题目</div>
@@ -657,6 +773,9 @@ function renderEnglish(){
   </div>`;
 
   document.getElementById('content').innerHTML = html;
+
+  // Render vocab after DOM ready
+  setTimeout(()=>renderVocab(ed), 50);
 }
 
 function toggleEnText(){const el=document.getElementById('enText');el.style.display=el.style.display==='none'?'block':'none';}
@@ -685,6 +804,66 @@ function speakAnswer(){
     const u = new SpeechSynthesisUtterance(ed.speaking.answer);
     u.rate = 0.85; u.lang='en-US';
     window.speechSynthesis.speak(u);
+  }
+}
+
+// Word training from article
+function extractVocab(articleText){
+  const words = articleText.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(w=>w.length>4);
+  const unique = [...new Set(words)];
+  const shuffled = unique.sort(()=>Math.random()-0.5).slice(0,10);
+  return shuffled.map(w=>({
+    word:w,
+    cn:getWordCN(w),
+    revealed:false
+  }));
+}
+
+function getWordCN(w){
+  const dict = {
+    advancement:'进步,发展',artificial:'人工的',intelligence:'智力,智能',fundamentally:'根本上',automated:'自动化的',analysis:'分析',machines:'机器',required:'需要,要求',experts:'专家',argues:'认为,争论',create:'创造',eliminates:'消除',particularly:'尤其,特别',creativity:'创造力',emotional:'情感的',
+    climate:'气候',planning:'规划',unprecedented:'前所未有的',challenges:'挑战',extreme:'极端的',weather:'天气',forcing:'迫使',planners:'规划者',rethink:'重新思考',designed:'设计',buildings:'建筑',improved:'改善的',transportation:'交通',forests:'森林',becoming:'成为',essential:'必要的',components:'组成部分',modern:'现代的',
+    lifelong:'终身的',learning:'学习',concept:'概念',important:'重要的',professionals:'专业人士',increasingly:'越来越',turning:'转向',courses:'课程',credentials:'证书',degrees:'学位',competitive:'有竞争力的',traditional:'传统的',replaced:'被取���',continuous:'持续的',development:'发展',skills:'技能',
+    rapidly:'快速地',changing:'变化的',market:'市场',model:'模式',forever:'永远',
+  };
+  return dict[w]||'（雅思高频词）';
+}
+
+function renderVocab(ed){
+  const area = document.getElementById('vocabArea');
+  if(!area) return;
+  const today = getToday();
+  const vocabData = DB.get('vocab_data')||{};
+  if(!vocabData[today]){
+    vocabData[today] = extractVocab(ed.article.text);
+    DB.set('vocab_data',vocabData);
+  }
+  const words = vocabData[today];
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+  words.forEach((w,i)=>{
+    html += `<div onclick="revealWord(${i})" id="vw_${i}" style="cursor:pointer;padding:8px 12px;background:#f5f0f8;border-radius:10px;font-size:13px;font-weight:600;min-width:60px;text-align:center;transition:all .2s;">
+      ${w.word}
+    </div>`;
+  });
+  html += '</div><div style="margin-top:8px;font-size:11px;color:var(--text-light);">👆 点击单词查看释义</div>';
+  area.innerHTML = html;
+}
+
+function revealWord(i){
+  const today = getToday();
+  const vocabData = DB.get('vocab_data')||{};
+  const words = vocabData[today];
+  if(!words||!words[i]) return;
+  words[i].revealed = !words[i].revealed;
+  DB.set('vocab_data',vocabData);
+  const el = document.getElementById('vw_'+i);
+  if(!el) return;
+  if(words[i].revealed){
+    el.style.background='linear-gradient(135deg,var(--pink-50),var(--blue-50))';
+    el.innerHTML = `<div>${words[i].word}</div><div style="font-size:10px;font-weight:400;color:var(--pink-300);">${words[i].cn}</div>`;
+  }else{
+    el.style.background='#f5f0f8';
+    el.innerHTML = words[i].word;
   }
 }
 
