@@ -216,7 +216,7 @@ function initDB(){
     DB.set('remixes_all',{});
     DB.set('remixes',[]);
     DB.set('worklogs',[]);
-    DB.set('body_measures',{height:165,waist:68,hip:92,thigh:52,calf:34,arm:26,shoulder:38,leg_length:98});
+    DB.set('body_measures',{height:165,weight:46,leg_length:100,thigh:50,calf:31,waist:57,chest:75,hip:85,wrist:14,forearm:19,ankle:21,arm:20.5,shoulder:36,arm_length:66.5});
     DB.set('body_measure_history',[]);
     DB.set('body_exercises',{});
     DB.set('init',true);
@@ -1284,15 +1284,20 @@ function renderBody(){
   const todayExercises = exercisesAll[today]||[];
 
   let html = `<div class="card">
-    <div class="card-title">📏 身体维度 <span style="font-size:11px;color:var(--text-light);font-weight:400;">身高 ${measures.height||165}cm</span></div>
+    <div class="card-title">📏 身体维度 <span style="font-size:11px;color:var(--text-light);font-weight:400;">身高 ${measures.height||165}cm · 体重 ${measures.weight||46}kg</span></div>
     <table class="measure-table">
-      <tr><td>腰围</td><td>${measures.waist||'-'} cm</td>${getChangeHtml(history,'waist',measures.waist)}</tr>
-      <tr><td>臀围</td><td>${measures.hip||'-'} cm</td>${getChangeHtml(history,'hip',measures.hip)}</tr>
+      <tr><td>腿长（到肚脐）</td><td>${measures.leg_length||'-'} cm</td>${getChangeHtml(history,'leg_length',measures.leg_length)}</tr>
       <tr><td>大腿围</td><td>${measures.thigh||'-'} cm</td>${getChangeHtml(history,'thigh',measures.thigh)}</tr>
       <tr><td>小腿围</td><td>${measures.calf||'-'} cm</td>${getChangeHtml(history,'calf',measures.calf)}</tr>
+      <tr><td>腰围</td><td>${measures.waist||'-'} cm</td>${getChangeHtml(history,'waist',measures.waist)}</tr>
+      <tr><td>胸围</td><td>${measures.chest||'-'} cm</td>${getChangeHtml(history,'chest',measures.chest)}</tr>
+      <tr><td>臀围</td><td>${measures.hip||'-'} cm</td>${getChangeHtml(history,'hip',measures.hip)}</tr>
+      <tr><td>手腕围</td><td>${measures.wrist||'-'} cm</td>${getChangeHtml(history,'wrist',measures.wrist)}</tr>
+      <tr><td>小臂围</td><td>${measures.forearm||'-'} cm</td>${getChangeHtml(history,'forearm',measures.forearm)}</tr>
+      <tr><td>脚腕围</td><td>${measures.ankle||'-'} cm</td>${getChangeHtml(history,'ankle',measures.ankle)}</tr>
       <tr><td>大臂围</td><td>${measures.arm||'-'} cm</td>${getChangeHtml(history,'arm',measures.arm)}</tr>
       <tr><td>肩宽</td><td>${measures.shoulder||'-'} cm</td>${getChangeHtml(history,'shoulder',measures.shoulder)}</tr>
-      <tr><td>腿长</td><td>${measures.leg_length||'-'} cm</td>${getChangeHtml(history,'leg_length',measures.leg_length)}</tr>
+      <tr><td>单侧臂长</td><td>${measures.arm_length||'-'} cm</td>${getChangeHtml(history,'arm_length',measures.arm_length)}</tr>
     </table>
     <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="openMeasureEdit()">✏️ 编辑维度</button>
   </div>`;
@@ -1325,7 +1330,7 @@ function renderBody(){
     <div style="font-size:12px;line-height:1.7;">`;
   if(totalDuration<30) html += `今日运动时长不足，建议至少保持30分钟中等强度运动。可尝试：快走、跳绳或瑜伽。<br>`;
   if(totalCalories<200) html += `卡路里消耗偏低，适当增加有氧运动如跑步或HIIT训练。<br>`;
-  if(measures.waist&&measures.hip&&measures.waist/measures.hip>0.85) html += `腰臀比偏高，建议加强核心训练和饮食控制。<br>`;
+  if(measures.waist&&measures.hip&&measures.waist/measures.hip>0.8) html += `腰臀比偏高，建议加强核心训练和饮食控制。<br>`;
   if(totalDuration>=30&&totalCalories>=200) html += `今日运动表现不错！保持规律，注意运动后拉伸放松。<br>`;
   html += `作为在职读研党，建议利用碎片时间运动：午休快走15min + 睡前拉伸10min。</div>
   </div>`;
@@ -1359,9 +1364,13 @@ function getChangeHtml(history,key,currentVal){
 function openMeasureEdit(){
   const measures = DB.get('body_measures')||{};
   const fields = [
-    {key:'height',label:'身高(cm)'},{key:'waist',label:'腰围(cm)'},{key:'hip',label:'臀围(cm)'},
-    {key:'thigh',label:'大腿围(cm)'},{key:'calf',label:'小腿围(cm)'},{key:'arm',label:'大臂围(cm)'},
-    {key:'shoulder',label:'肩宽(cm)'},{key:'leg_length',label:'腿长(cm)'},
+    {key:'height',label:'身高(cm)'},{key:'weight',label:'体重(kg)'},
+    {key:'leg_length',label:'腿长(cm)'},{key:'thigh',label:'大腿围(cm)'},
+    {key:'calf',label:'小腿围(cm)'},{key:'waist',label:'腰围(cm)'},
+    {key:'chest',label:'胸围(cm)'},{key:'hip',label:'臀围(cm)'},
+    {key:'wrist',label:'手腕围(cm)'},{key:'forearm',label:'小臂围(cm)'},
+    {key:'ankle',label:'脚腕围(cm)'},{key:'arm',label:'大臂围(cm)'},
+    {key:'shoulder',label:'肩宽(cm)'},{key:'arm_length',label:'单侧臂长(cm)'},
   ];
   let formHtml = '<h4 style="margin-bottom:12px;">✏️ 编辑身体维度</h4>';
   fields.forEach(f=>{
@@ -1380,7 +1389,7 @@ function saveMeasures(){
   history.push({...oldMeasures,date:getNow()});
   DB.set('body_measure_history',history);
 
-  const fields = ['height','waist','hip','thigh','calf','arm','shoulder','leg_length'];
+  const fields = ['height','weight','leg_length','thigh','calf','waist','chest','hip','wrist','forearm','ankle','arm','shoulder','arm_length'];
   const newMeasures = {};
   fields.forEach(f=>{
     const val = parseFloat(document.getElementById('meas_'+f)?.value);
