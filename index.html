@@ -1091,7 +1091,63 @@ function renderMPA(){
   });
   html += `</div>`;
 
+  // Q&A section
+  html += `<div class="card">
+    <div class="card-title">❓ 知识问答 <span style="font-size:11px;color:var(--text-light);font-weight:400;">不懂的名词，随时提问</span></div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <input type="text" id="mpaQuestion" placeholder="例如：什么是绩效预算管理？" style="flex:1;">
+      <button class="btn btn-blue btn-sm" onclick="askMPA()">🔍 提问</button>
+    </div>
+    <div id="mpaAnswer" style="font-size:12px;line-height:1.7;display:none;padding:10px;background:#f5f0f8;border-radius:8px;"></div>
+  </div>`;
+
   document.getElementById('content').innerHTML = html;
+}
+
+// MPA Q&A
+function askMPA(){
+  const q = document.getElementById('mpaQuestion')?.value.trim();
+  const ans = document.getElementById('mpaAnswer');
+  if(!q||!ans) return;
+  ans.style.display='block';
+  ans.innerHTML = `<strong>🔍 「${escHtml(q)}」</strong><br><br>${searchMPAKnowledge(q)}`;
+}
+
+function searchMPAKnowledge(q){
+  const lower = q.toLowerCase();
+  if(lower.includes('绩效预算')||lower.includes('绩效管理')) return '📖 <b>绩效预算管理</b>是指将预算分配与绩效结果挂钩的预算管理模式。核心逻辑是"花钱必问效，无效必问责"。通过设定可量化的绩效指标，在预算编制、执行、决算各环节进行绩效评价，评价结果作为下一年度预算安排的重要依据。这是新公共管理运动的核心工具之一。';
+  if(lower.includes('预算管理')||lower.includes('预算')) return '📖 <b>预算管理制度</b>是国家对财政收支进行计划、控制、监督的规范体系。2021年国务院印发的改革意见提出：强化预算刚性约束、推进支出标准化、加强预算绩效管理、防控财政风险。对MPA学生而言，重点理解"零基预算"与"绩效预算"的区别。';
+  if(lower.includes('数字政府')||lower.includes('一网通办')) return '📖 <b>数字政府</b>是指运用大数据、云计算、AI等技术推动政府治理模式数字化转型。核心特征包括：数据驱动决策、一网通办服务、智能化监管。当前挑战在于打破部门数据壁垒、弥合数字鸿沟、保��数据安全。';
+  if(lower.includes('城市更新')||lower.includes('微改造')) return '📖 <b>城市更新</b>是对城市建成区进行综合整治、功能完善或拆除重建的活动。"微改造"强调在维持现状建设格局基本不变的前提下，通过局部拆建、功能置换、保留修缮等方式提升人居环境。体现了从"大拆大建"到"有机更新"的理念转变。';
+  if(lower.includes('基层减负')||lower.includes('督查')) return '📖 <b>基层减负</b>是中央针对基层"文山会海"、过度留痕等形式主义问题推出的系统性治理措施。核心手段包括：精简会议文件、规范督查考核、清理"责任状"泛滥现象。目标是让基层干部从"迎检"中解脱出来，回归服务群众的主业。';
+  if(lower.includes('协作治理')||lower.includes('网络化治理')||lower.includes('治理理论')) return '📖 <b>协作治理</b>（Collaborative Governance）强调政府、企业、社会组织、公民等多元主体通过协商合作共同参与公共事务决策和执行。<b>网络化治理</b>则强调在复杂政策领域中构建跨组织、跨部门的合作网络。两者都是对传统"命令-控制"模式的超越，是当前公共管理学科的前沿方向。';
+  if(lower.includes('新公共服务')||lower.includes('公共服务')) return '📖 <b>新公共服务理论</b>由登哈特夫妇提出，核心主张是"服务而非掌舵"。强调公务员的角色是帮助公民表达并满足共同利益，而非控制社会。七大原则：服务公民、追求公共利益、战略思考民主行动、服务公民而非顾客、责任非单一、重视人而非效率、重视公民权。';
+  if(lower.includes('mRNA')||lower.includes('信使rna')||lower.includes('mrna')) return '📖 <b>mRNA（信使核糖核酸）</b>是传递DNA遗传信息到蛋白质合成工厂的中介分子。mRNA疫苗原理：将编码病原体蛋白的mRNA注入人体→细胞读取后自行产生病原体蛋白→免疫系统识别并产生抗体。与传统疫苗相比，mRNA疫苗研发速度快、安全性高、不进入细胞核。';
+  return '📖 关于「'+escHtml(q)+'」，建议查阅相关专业文献或在中国知网（CNKI）、万方数据库中搜索相关论文。你也可以在评论区补充更多上下文，我会进一步解答。';
+}
+
+// Industry News Q&A
+function askNews(){
+  const q = document.getElementById('newsQuestion')?.value.trim();
+  const ans = document.getElementById('newsAnswer');
+  if(!q||!ans) return;
+  ans.style.display='block';
+  ans.innerHTML = `<strong>🔍 「${escHtml(q)}」</strong><br><br>${searchNewsKnowledge(q)}`;
+}
+
+function searchNewsKnowledge(q){
+  const lower = q.toLowerCase();
+  if(lower.includes('lpr')||lower.includes('贷款市场报价利率')) return '📖 <b>LPR（贷款市场报价利率）</b>是由18家商业银行根据公开市场操作利率加点形成的贷款利率基准。分为1年期和5年期以上两个品种。5年期以上LPR直接关联房贷利率。LPR下调意味着企业和居民的贷款成本降低，有助于刺激经济。';
+  if(lower.includes('红利低波')||lower.includes('etf')) return '📖 <b>红利低波ETF</b>是跟踪"红利+低波动"策略指数的交易型开放式基金。红利因子筛选高股息率公司，低波因子排除股价波动大的股票，两者结合追求"高分红+低风险"的投资目标。适合稳健型投资者作为养老储备配置。';
+  if(lower.includes('个人养老金')||lower.includes('指数基金')) return '📖 <b>个人养老金</b>是中国养老保险体系的第三支柱。每年最高缴存12000元，可享受个税递延优惠。2024年扩容后将指数基金纳入可投范围，意味着参加者可以用养老金账户定投沪深300、中证500等宽基指数，享受长期复利增长。';
+  if(lower.includes('mrna')||lower.includes('信使rna')) return '📖 <b>mRNA技术</b>：mRNA是信使RNA，将DNA中的遗传信息传递给核糖体以合成蛋白质。mRNA疫苗（如新冠疫苗）的原理是将编码病毒蛋白的mRNA包裹在脂质纳米颗粒中注入人体，细胞读取后自行产生病毒蛋白，训练免疫系统识别并攻击真正的病毒。优势：研发快、不整合基因组、可快速迭代。';
+  if(lower.includes('pd-1')||lower.includes('免疫检查点')) return '📖 <b>PD-1（程序性死亡受体-1）</b>是T细胞表面的免疫检查点蛋白。癌细胞通过表达PD-L1与T细胞的PD-1结合来"伪装"自己逃避免疫攻击。PD-1抑制剂（如Keytruda）阻断这一结合，重新激活T细胞杀伤肿瘤。这是免疫治疗领域的革命性突破，2018年获诺贝尔奖。';
+  if(lower.includes('alphafold')||lower.includes('蛋白质结构预测')) return '📖 <b>AlphaFold</b>是DeepMind开发的AI蛋白质结构预测系统。蛋白质的功能取决于其三维结构，传统方法（X射线晶体学等）耗时数年。AlphaFold 3可预测蛋白质与DNA、RNA、小分子药物的相互作用，将药物靶点发现效率提升数倍，被视为结构生物学的革命。';
+  if(lower.includes('fda')||lower.includes('新药审批')) return '📖 <b>FDA（美国食品药品监督管理局）</b>是全球最严格的药品审评机构之一。中国创新药获得FDA批准意味着达到了国际标准，可以进入美国乃至全球市场。这是中国医药产业从"仿制"到"创新"转型的重要里程碑。';
+  if(lower.includes('量化宽松')||lower.includes('qe')) return '📖 <b>量化宽松（QE）</b>是中央银行在利率接近零时，通过购买国债等资产向市场注入流动性的非常规货币政策工具。目的是压低长期利率、刺激借贷和投资。副作用包括资产泡沫风险和贫富差距扩大。';
+  if(lower.includes('固收')||lower.includes('债券')) return '📖 <b>固收类产品</b>（固定收益产品）指收益率相对确定的投资工具，主要包括国债、金融债、企业债、银行理财等。特点是风险较低、收益稳定。当LPR下调时，新发债券利率通常随之走低，导致存量高息债券价格上涨。';
+  if(lower.includes('大模型')||lower.includes('llm')) return '📖 <b>大语言模型（LLM）</b>是基于Transformer架构、使用海量文本数据训练的超大规模AI模型（如GPT、文心一言、通义千问）。在医疗领域，LLM可用于辅助影像诊断、病历分析、药物研发、患者咨询等场景，但仍面临幻觉、可解释性、数据隐私等挑战。';
+  return '📖 关于「'+escHtml(q)+'」，这是一个很好的问题。建议你查阅相关行业报告或专业网站获取更详细的信息。常见参考来源：东方财富网（理财）、药智网（生物医药）、机器之心（AI）。';
 }
 
 // 7. 消费记账
@@ -1207,6 +1263,16 @@ function renderNews(){
     </div>`;
   });
   html += `</div>`;
+
+  // Q&A section
+  html += `<div class="card">
+    <div class="card-title">❓ 知识问答 <span style="font-size:11px;color:var(--text-light);font-weight:400;">不懂的名词，随时提问</span></div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <input type="text" id="newsQuestion" placeholder="例如：什么是LPR？mRNA疫苗原理？" style="flex:1;">
+      <button class="btn btn-blue btn-sm" onclick="askNews()">🔍 提问</button>
+    </div>
+    <div id="newsAnswer" style="font-size:12px;line-height:1.7;display:none;padding:10px;background:#f5f0f8;border-radius:8px;"></div>
+  </div>`;
 
   document.getElementById('content').innerHTML = html;
 }
